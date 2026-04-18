@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Semillero Astronómico Venezuela - El Cometa</title>
+    <style>
+        /* ==================== VARIABLES Y ESTILOS BASE ==================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-color: #fef9e8; --text-color: #1e2a3a; --card-bg: white; --card-shadow: rgba(0,0,0,0.1);
+            --border-color: #ffb347; --tab-bg: #fff2df; --hero-bg-start: #0b2b3b; --hero-bg-end: #1a4a5f;
+            --input-bg: #fffef7; --result-bg: #fef3e0; --chat-bot-bg: white; --footer-bg: #1e2a3a;
+            --footer-text: #ffd494; --news-card-bg: #fffcf5; --ranking-bg: #fef3e0;
+            --question-option-bg: #f0f7fa; --question-option-hover: #ffe8cc;
+        }
+        body.dark-mode {
+            --bg-color: #1a1a2e; --text-color: #e0e0e0; --card-bg: #16213e; --card-shadow: rgba(0,0,0,0.3);
+            --border-color: #e94560; --tab-bg: #0f3460; --hero-bg-start: #0f3460; --hero-bg-end: #16213e;
+            --input-bg: #1a1a2e; --result-bg: #0f3460; --chat-bot-bg: #16213e; --footer-bg: #0f3460;
+            --footer-text: #e94560; --news-card-bg: #1a1a2e; --ranking-bg: #0f3460;
+            --question-option-bg: #16213e; --question-option-hover: #0f3460;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: var(--text-color); line-height: 1.5; scroll-behavior: smooth; transition: background 0.3s, color 0.3s; }
+        .header-controls { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 15px; }
+        .control-btn { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 50px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 2px 2px 8px var(--card-shadow); transition: all 0.3s; color: var(--text-color); font-weight: bold; }
+        .control-btn.admin-btn { width: auto; padding: 0 15px; font-size: 0.9rem; }
+        .control-btn:hover { transform: scale(1.1); }
+        .hero { background: linear-gradient(135deg, var(--hero-bg-start), var(--hero-bg-end)); color: white; padding: 2rem 1rem; text-align: center; border-bottom: 8px solid var(--border-color); }
+        .tabs { display: flex; flex-wrap: wrap; justify-content: center; background: var(--tab-bg); border-bottom: 3px solid var(--border-color); position: sticky; top: 0; z-index: 99; padding: 0.5rem 1rem 0; }
+        .tab-btn { background: transparent; border: none; padding: 0.8rem 1.2rem; font-size: 1rem; font-weight: bold; cursor: pointer; border-radius: 30px 30px 0 0; color: var(--text-color); transition: 0.2s; }
+        .tab-btn.active { background: var(--border-color); color: white; }
+        .tab-content { display: none; padding: 2rem; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: var(--card-bg); border-radius: 30px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 8px 8px 0 var(--card-shadow); border: 2px solid var(--border-color); transition: transform 0.2s, background 0.3s; position: relative; }
+        .card:hover { transform: translate(-2px, -2px); }
+        .card h2 { font-size: 1.8rem; margin-bottom: 1rem; color: var(--text-color); border-left: 8px solid var(--border-color); padding-left: 1rem; }
+        .edit-btn { position: absolute; top: 15px; right: 15px; background: var(--border-color); color: #1e2a3a; border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.8; z-index: 5; }
+        .edit-btn:hover { opacity: 1; }
+        input, select, textarea { width: 100%; padding: 0.7rem; margin: 0.5rem 0; border-radius: 20px; border: 2px solid var(--border-color); background: var(--input-bg); color: var(--text-color); font-size: 1rem; }
+        button { background: var(--border-color); color: #2c3e50; border: none; padding: 0.6rem 1.2rem; border-radius: 40px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.95); }
+        .result { background: var(--result-bg); padding: 1rem; border-radius: 20px; margin-top: 1rem; border-left: 5px solid var(--border-color); color: var(--text-color); }
+        .sim-canvas, .planet-canvas { background: #0a1a2a; border-radius: 20px; width: 100%; max-width: 600px; height: auto; display: block; margin: 0 auto; border: 3px solid var(--border-color); }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1rem; }
+        .news-card { background: var(--news-card-bg); border-radius: 24px; border: 1px solid var(--border-color); overflow: hidden; box-shadow: 4px 4px 0 var(--card-shadow); position: relative; }
+        .news-img { width: 100%; height: 160px; object-fit: cover; border-bottom: 3px solid var(--border-color); }
+        .news-content { padding: 1rem; }
+        .news-title { font-size: 1.2rem; font-weight: bold; color: var(--text-color); text-decoration: none; }
+        .news-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 10; }
+        .news-actions button { width: 30px; height: 30px; border-radius: 50%; padding: 0; }
+        .read-more { display: inline-block; background: var(--border-color); color: white; padding: 0.3rem 1rem; border-radius: 40px; text-decoration: none; font-size: 0.8rem; margin-top: 0.5rem; }
+        .chat-box { background: var(--result-bg); border-radius: 24px; padding: 1rem; height: 350px; overflow-y: auto; margin-bottom: 1rem; border: 2px solid var(--border-color); }
+        .chat-msg { margin: 0.5rem 0; padding: 0.5rem 1rem; border-radius: 20px; max-width: 85%; clear: both; }
+        .user-msg { background: var(--border-color); color: white; float: right; }
+        .bot-msg { background: var(--chat-bot-bg); border: 1px solid var(--border-color); color: var(--text-color); float: left; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1rem; }
+        .gallery-item { background: var(--card-bg); border-radius: 20px; overflow: hidden; border: 2px solid var(--border-color); box-shadow: 4px 4px 0 var(--card-shadow); position: relative; }
+        .gallery-img { width: 100%; height: 200px; object-fit: cover; border-bottom: 2px solid var(--border-color); }
+        .gallery-caption { padding: 0.8rem; text-align: center; color: var(--text-color); }
+        .loader { text-align: center; padding: 1rem; font-style: italic; color: var(--border-color); }
+        footer { text-align: center; padding: 1.5rem; background: var(--footer-bg); color: var(--footer-text); }
+        .ranking-list { list-style: none; padding: 0; }
+        .ranking-list li { display: flex; justify-content: space-between; padding: 0.5rem 1rem; margin: 0.3rem 0; background: var(--ranking-bg); border-radius: 20px; border-left: 5px solid var(--border-color); }
+        .ranking-list li.champion { border: 3px solid gold; background: #fff8e7; font-weight: bold; box-shadow: 0 0 10px gold; position: relative; }
+        .ranking-list li.champion::before { content: "👑"; position: absolute; left: -15px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; }
+        .question-option { display: block; margin: 0.8rem 0; padding: 0.8rem; background: var(--question-option-bg); border-radius: 20px; cursor: pointer; border: 2px solid transparent; }
+        .question-option:hover { background: var(--question-option-hover); border-color: var(--border-color); }
+        .question-option.selected { background: var(--border-color); color: white; }
+        .question-option.correct-feedback { background: #4caf50; color: white; }
+        .question-option.wrong-feedback { background: #e94560; color: white; }
+        a { color: var(--border-color); }
+        .visitas-container { margin-top: 1rem; padding: 1rem; background: var(--result-bg); border-radius: 20px; border: 1px solid var(--border-color); }
+        .game-container { position: relative; display: flex; flex-direction: column; align-items: center; }
+        #gameCanvas { background: #0a1a2a; border-radius: 20px; border: 3px solid var(--border-color); width: 100%; max-width: 800px; height: auto; aspect-ratio: 1/1; display: block; margin: 0 auto; touch-action: none; }
+        .game-controls { margin: 1rem 0; text-align: center; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; align-items: center; }
+        .touch-controls { display: none; position: relative; width: 100%; max-width: 800px; margin: 0 auto; }
+        .touch-area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; pointer-events: none; }
+        .joystick-zone { flex: 1; pointer-events: auto; background: rgba(255,255,255,0.05); border-radius: 20px 0 0 20px; }
+        .shoot-zone { flex: 1; pointer-events: auto; background: rgba(255,255,255,0.05); border-radius: 0 20px 20px 0; }
+        .touch-hint { text-align: center; color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 0.5rem; }
+        .fullscreen-btn { background: var(--card-bg); border: 2px solid var(--border-color); color: var(--text-color); padding: 0.5rem 1rem; border-radius: 40px; margin-left: 0.5rem; cursor: pointer; }
+        .start-btn { background: #4caf50; color: white; font-size: 1.2rem; padding: 0.8rem 2rem; }
+        .efemerides-box { background: var(--result-bg); border-radius: 20px; padding: 1rem; margin-top: 1rem; border: 1px solid var(--border-color); }
+        @media (max-width: 700px) {
+            .grid-2 { grid-template-columns: 1fr; } .tab-btn { padding: 0.5rem 0.8rem; font-size: 0.8rem; } .header-controls { top: 10px; right: 10px; }
+            .touch-controls { display: block; }
+            .game-container { user-select: none; -webkit-tap-highlight-color: transparent; }
+        }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 30px; max-width: 500px; width: 90%; border: 3px solid var(--border-color); }
+        .legend { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; padding: 0.8rem; background: var(--result-bg); border-radius: 20px; }
+        .legend-item { display: flex; align-items: center; gap: 0.3rem; }
+        .legend-color { width: 15px; height: 15px; border-radius: 50%; }
+        .progress-bar { width: 100%; height: 10px; background: #ddd; border-radius: 10px; margin: 1rem 0; }
+        .progress-fill { height: 100%; background: var(--border-color); border-radius: 10px; width: 0%; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+
+<div class="header-controls">
+    <div class="control-btn admin-btn" id="adminBtn" role="button" tabindex="0">👑 Admin</div>
+    <div class="control-btn" id="themeToggle" role="button" aria-label="Cambiar tema" tabindex="0">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+            <path d="M12 3v1m0 16v1m9-9h-1m-16 0H3m15.32-6.32l-.71-.71M5.38 18.38l-.71-.71M18.32 18.32l-.71-.71M5.38 5.38l-.71-.71M12 7a5 5 0 100 10 5 5 0 000-10z" stroke="currentColor" stroke-width="2" fill="none"/>
+        </svg>
+    </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" style="display:none;" class="modal">
+    <div class="modal-content">
+        <h3>🔐 Acceso Administrador</h3>
+        <input type="text" id="adminUser" placeholder="Usuario">
+        <input type="password" id="adminPass" placeholder="Contraseña">
+        <div style="display:flex; gap:1rem; justify-content:flex-end; margin-top:1rem;">
+            <button id="cancelLoginBtn">Cancelar</button>
+            <button id="confirmLoginBtn">Ingresar</button>
+        </div>
+        <div id="loginError" style="color:#e94560;"></div>
+    </div>
+</div>
+
+<!-- MODAL EDICIÓN TEXTO -->
+<div id="editModal" style="display:none;" class="modal">
+    <div class="modal-content">
+        <h3 id="editModalTitle">Editar contenido</h3>
+        <div id="editModalFields"></div>
+        <div style="display:flex; gap:1rem; justify-content:flex-end; margin-top:1rem;">
+            <button id="cancelEditBtn">Cancelar</button>
+            <button id="saveEditBtn">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="hero">
+    <h1>✨ Semillero Astronómico Venezuela ✨</h1>
+    <p>El Cometa - Noticias del espacio | Simulador | Calculadoras | IA Astronómica | Cuestionario | Juego</p>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" data-tab="tab1">🌍 Inicio</button>
+    <button class="tab-btn" data-tab="tab2">🪐 Gravedad</button>
+    <button class="tab-btn" data-tab="tab3">📊 Calculadoras</button>
+    <button class="tab-btn" data-tab="tab4">🌌 Planetas</button>
+    <button class="tab-btn" data-tab="tab5">📰 El Cometa</button>
+    <button class="tab-btn" data-tab="tab6">🖼️ Recursos Visuales</button>
+    <button class="tab-btn" data-tab="tab7">🤖 IA Astronómica</button>
+    <button class="tab-btn" data-tab="tab8">❓ Cuestionario</button>
+    <button class="tab-btn" data-tab="tab9">🎮 Asteroides</button>
+    <button class="tab-btn" data-tab="tab10">📞 Soporte</button>
+</div>
+
+<!-- ==================== INICIO (tab1) ==================== -->
+<div id="tab1" class="tab-content active">
+    <div class="card" data-editable="welcome">
+        <h2>🚀 ¡Bienvenidos al Semillero!</h2>
+        <p class="editable-text">Herramientas para aprender astronomía, prepararte para olimpiadas y mantenerte al día con las noticias del espacio.</p>
+        <div class="result editable-text">💡 Explora las pestañas: simulador de gravedad, calculadora de telescopio, visor de planetas, el periódico "El Cometa", recursos visuales, IA astronómica, el desafío de 100 preguntas y el juego de Asteroides.</div>
+    </div>
+    <div id="adminVisitasPanel" style="display:none;" class="card">
+        <h2>📊 Estadísticas de Visitas</h2>
+        <div class="visitas-container">
+            <p>👁️ Visitas totales: <strong><span id="visitasTotales">0</span></strong></p>
+            <p>📅 Visitas hoy: <strong><span id="visitasHoy">0</span></strong></p>
+        </div>
+    </div>
+    <div class="card" data-editable="olimpiadas">
+        <h2>🏆 II Olimpiada Venezolana de Astronomía 2026</h2>
+        <p class="editable-text">El Ministerio del Poder Popular para Ciencia y Tecnología (Mincyt) y el Programa Nacional Semilleros Científicos invitan a jóvenes entre 12 y 19 años a participar en la II Edición de la Olimpiada Venezolana de Astronomía 2026.</p>
+        <p class="editable-text"><strong>Fechas clave:</strong> Inscripciones hasta el 12 de enero de 2026. El evento se desarrollará en tres etapas: estadal, regional y nacional.</p>
+        <p class="editable-text">Más información: <a href="https://mincyt.gob.ve/inician-inscripciones-para-la-ii-edicion-de-la-olimpiada-venezolana-de-astronomia-2026/" target="_blank">Nota de prensa oficial</a></p>
+    </div>
+    <div class="card" data-editable="cidata">
+        <h2>🔭 CIDATA: Centro de Investigaciones de Astronomía</h2>
+        <p class="editable-text">Fundación Centro de Investigaciones de Astronomía y Tecnologías Aplicadas “Francisco J. Duarte” (CIDATA). En 2025 alcanzó un impacto histórico con más de 30 mil personas atendidas.</p>
+        <p class="editable-text">Visita: <a href="https://cidata.gob.ve/" target="_blank">cidata.gob.ve</a></p>
+    </div>
+    <div class="card">
+        <h2>🌌 Planetario Stellarium</h2>
+        <iframe src="https://stellarium-web.org/" style="width:100%; height:450px; border-radius:20px; border:2px solid var(--border-color);"></iframe>
+    </div>
+</div>
+
+<!-- ==================== SIMULADOR GRAVEDAD (tab2) ==================== -->
+<div id="tab2" class="tab-content">
+    <div class="card">
+        <h2>🪐 Simulador: Gravedad Tierra-Luna</h2>
+        <label>Distancia (miles de km): <input type="range" id="distanciaLuna" min="50" max="400" value="384" step="1"></label>
+        <span id="distanciaValor">384,000 km</span>
+        <canvas id="simuladorCanvas" width="600" height="300" class="sim-canvas"></canvas>
+        <div id="infoVelocidad" class="result">Velocidad orbital actual: 1.02 km/s (periodo ≈ 27.3 días)</div>
+    </div>
+</div>
+
+<!-- ==================== CALCULADORAS (tab3) ==================== -->
+<div id="tab3" class="tab-content">
+    <div class="card">
+        <h2>🔭 Calculadora de telescopio</h2>
+        <label>Diámetro (mm): <input type="number" id="diametroCalc" value="150"></label>
+        <label>Distancia focal (mm): <input type="number" id="focalCalc" value="1200"></label>
+        <label>Ocular (mm): <input type="number" id="ocularCalc" value="25"></label>
+        <button id="calcTelescopioBtn">Calcular</button>
+        <div id="resultadoCalc" class="result">Aumento: --x | Magnitud límite: -- | Campo real: --°</div>
+    </div>
+    <div class="card">
+        <h2>🔄 Conversor de unidades astronómicas</h2>
+        <div class="grid-2">
+            <div><label>UA:</label><input type="number" id="ua" value="1"></div>
+            <div><label>Kilómetros (km):</label><input type="number" id="km" value="149597870.7"></div>
+            <div><label>Parsec (pc):</label><input type="number" id="pc" value="4.848e-6"></div>
+            <div><label>Años Luz (ly):</label><input type="number" id="ly" value="1.581e-5"></div>
+        </div>
+        <button id="convertirAstro">Convertir</button>
+        <div id="resultConversor" class="result">1 UA = 149,597,871 km ≈ 4.848e-6 pc ≈ 1.581e-5 ly</div>
+    </div>
+</div>
+
+<!-- ==================== VISOR DE PLANETAS (tab4) ==================== -->
+<div id="tab4" class="tab-content">
+    <div class="card">
+        <h2>🌌 Visor de planetas</h2>
+        <canvas id="planetsCanvas" width="500" height="500" class="planet-canvas"></canvas>
+        <div class="legend">
+            <div class="legend-item"><span class="legend-color" style="background:#b08d6e;"></span> Mercurio</div>
+            <div class="legend-item"><span class="legend-color" style="background:#e6b800;"></span> Venus</div>
+            <div class="legend-item"><span class="legend-color" style="background:#4cafaa;"></span> Tierra</div>
+            <div class="legend-item"><span class="legend-color" style="background:#c4554c;"></span> Marte</div>
+            <div class="legend-item"><span class="legend-color" style="background:#c0a080;"></span> Júpiter</div>
+            <div class="legend-item"><span class="legend-color" style="background:#e8cfb0;"></span> Saturno</div>
+            <div class="legend-item"><span class="legend-color" style="background:#6fd4d4;"></span> Urano</div>
+            <div class="legend-item"><span class="legend-color" style="background:#4169e1;"></span> Neptuno</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== EL COMETA (tab5) ==================== -->
+<div id="tab5" class="tab-content">
+    <div class="card">
+        <h2>📰 El Cometa - Noticias</h2>
+        <div id="customNewsContainer" class="news-grid"></div>
+        <div id="adminNewsPanel" style="display:none;" class="admin-panel">
+            <h3>➕ Agregar/Editar noticia</h3>
+            <input type="text" id="newsTitle" placeholder="Título">
+            <textarea id="newsDesc" placeholder="Descripción breve" rows="2"></textarea>
+            <input type="text" id="newsImgUrl" placeholder="URL de la imagen (opcional)">
+            <input type="text" id="newsLink" placeholder="Enlace (opcional)">
+            <button id="saveNewsBtn">Guardar noticia</button>
+            <button id="cancelNewsEditBtn">Cancelar</button>
+            <input type="hidden" id="editingNewsId" value="">
+        </div>
+        <div class="efemerides-box" id="efemeridesBox">
+            <h3>📅 Efemérides / Personajes</h3>
+            <p id="efemeridesText">Cargando...</p>
+        </div>
+    </div>
+    <div class="card">
+        <h2>🖼️ Imagen Astronómica del Día (NASA)</h2>
+        <div id="apodContainer"><div class="result">Cargando...</div></div>
+    </div>
+</div>
+
+<!-- ==================== RECURSOS VISUALES (tab6) ==================== -->
+<div id="tab6" class="tab-content">
+    <div class="card">
+        <h2>🖼️ Galería del Sistema Solar</h2>
+        <div class="gallery-grid" id="sistemaSolarGallery"></div>
+    </div>
+</div>
+
+<!-- ==================== IA (tab7) ==================== -->
+<div id="tab7" class="tab-content">
+    <div class="card">
+        <h2>🤖 Asistente Astronómica</h2>
+        <div class="chat-box" id="chatBox">
+            <div class="chat-msg bot-msg">🔭 ¡Hola! Pregúntame sobre el espacio.</div>
+        </div>
+        <input type="text" id="userQuestion" placeholder="Ej: ¿Qué es un agujero negro?">
+        <button id="askBtn">Preguntar</button>
+    </div>
+</div>
+
+<!-- ==================== CUESTIONARIO (tab8) ==================== -->
+<div id="tab8" class="tab-content">
+    <div class="card">
+        <h2>❓ Desafío de 100 Preguntas</h2>
+        <div id="loginSection">
+            <label>👤 Ingresa tu nombre para comenzar:</label>
+            <input type="text" id="playerName" placeholder="Tu nombre">
+            <button id="startQuizBtn">Comenzar Desafío</button>
+        </div>
+        <div id="quizSection" style="display:none;">
+            <div style="display:flex; justify-content:space-between;">
+                <h3>Jugador: <span id="displayName"></span></h3>
+                <h3>Pregunta <span id="currentQuestionNumber">1</span>/100</h3>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width:1%;"></div>
+            </div>
+            <div id="questionContainer">
+                <p id="questionText"></p>
+                <div id="optionsContainer"></div>
+            </div>
+            <div id="quizMessage" class="result" style="display:none;"></div>
+            <button id="nextQuestionBtn" style="display:none; margin-top:1rem;">Siguiente →</button>
+        </div>
+        <div style="margin-top:2rem;">
+            <h3>🏆 Ranking del Día (100 preguntas completadas)</h3>
+            <ul id="rankingList" class="ranking-list"><li>Cargando...</li></ul>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== JUEGO DE ASTEROIDES (tab9) ==================== -->
+<div id="tab9" class="tab-content">
+    <div class="card">
+        <h2>🎮 Asteroides: Edición Definitiva</h2>
+        <div class="game-container">
+            <canvas id="gameCanvas" width="800" height="800"></canvas>
+            <div class="touch-controls">
+                <div class="touch-area">
+                    <div class="joystick-zone" id="joystickZone"></div>
+                    <div class="shoot-zone" id="shootZone"></div>
+                </div>
+                <div class="touch-hint">← Desliza para girar/acelerar | Toca para disparar →</div>
+            </div>
+            <div class="game-controls">
+                <button id="startGameBtn" class="start-btn">▶️ Iniciar Juego</button>
+                <button id="restartGameBtn" style="display:none;">🔄 Reiniciar</button>
+                <button id="fullscreenBtn" class="fullscreen-btn">⛶ Pantalla Completa</button>
+                <p>Puntuación: <strong id="gameScoreDisplay">0</strong></p>
+            </div>
+            <div style="margin-top:1rem; width:100%;">
+                <h3>🏆 Ranking de Asteroides</h3>
+                <ul id="gameRankingList" class="ranking-list"><li>Cargando...</li></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== SOPORTE (tab10) ==================== -->
+<div id="tab10" class="tab-content">
+    <div class="card">
+        <h2>📞 Soporte</h2>
+        <p>WhatsApp: <a href="https://wa.me/584242102123">+58 424 2102123</a></p>
+    </div>
+</div>
+
+<footer>Astronomía Caracas</footer>
+
+<script>
+    (function(){
+        'use strict';
+        
+        // ==================== CONFIGURACIÓN JSONBIN ====================
+        const CONFIG = {
+            JSONBIN_API_KEY: '$2a$10$M/Hy7ce4UuOIFvnT1kpq4.EOm9jr6PA1n7Jw7sgOnnnoQBKtgp0LK',
+            JSONBIN_BIN_ID: '69e18e8336566621a8c08c56'
+        };
+        
+        // ==================== ESTADO GLOBAL ====================
+        let isAdmin = false;
+        const ADMIN_CREDS = [
+            { user: 'jorge', pass: 'astronomiacaracas' },
+            { user: 'sebastian', pass: 'astronomiacaracas' }
+        ];
+        
+        let siteContent = JSON.parse(localStorage.getItem('siteContent')) || {};
+        let customNews = [];
+        let rankingDiario = [];       // para el cuestionario
+        let gameRanking = [];         // para el juego
+        let visitas = { total: 0, hoy: 0, fechaHoy: '' };
+        
+        // ==================== GALERÍA FIJA DEL SISTEMA SOLAR ====================
+        const sistemaSolar = [
+            { nombre: 'Sol', desc: 'Estrella tipo G, centro de nuestro sistema.', img: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg' },
+            { nombre: 'Mercurio', desc: 'El planeta más cercano al Sol.', img: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Mercury_in_true_color.jpg' },
+            { nombre: 'Venus', desc: 'Similar en tamaño a la Tierra.', img: 'https://upload.wikimedia.org/wikipedia/commons/e/e5/Venus-real_color.jpg' },
+            { nombre: 'Tierra', desc: 'Nuestro hogar, el único planeta con vida.', img: 'https://upload.wikimedia.org/wikipedia/commons/9/97/The_Blue_Marble.jpg' },
+            { nombre: 'Marte', desc: 'El "planeta rojo", con el volcán más grande.', img: 'https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg' },
+            { nombre: 'Júpiter', desc: 'El gigante gaseoso con la Gran Mancha Roja.', img: 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Jupiter_and_its_shrunken_Great_Red_Spot.jpg' },
+            { nombre: 'Saturno', desc: 'Famoso por sus impresionantes anillos.', img: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Saturn_during_Equinox.jpg' },
+            { nombre: 'Urano', desc: 'Gigante de hielo que rota de lado.', img: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Uranus2.jpg' },
+            { nombre: 'Neptuno', desc: 'El planeta más ventoso.', img: 'https://upload.wikimedia.org/wikipedia/commons/5/56/Neptune_Full.jpg' },
+            { nombre: 'Luna', desc: 'Nuestro satélite natural.', img: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/FullMoon2010.jpg' }
+        ];
+        
+        function cargarGaleriaSistemaSolar() {
+            const container = document.getElementById('sistemaSolarGallery');
+            let html = '';
+            sistemaSolar.forEach(obj => {
+                html += `<div class="gallery-item" onclick="window.open('${obj.img}','_blank')">
+                    <img src="${obj.img}" class="gallery-img" alt="${obj.nombre}" loading="lazy">
+                    <div class="gallery-caption"><h3>${obj.nombre}</h3><p>${obj.desc}</p></div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+        
+        // ==================== EFEMÉRIDES ROTATIVAS ====================
+        const efemerides = [
+            "🌠 4 de octubre de 1957: Lanzamiento del Sputnik 1, primer satélite artificial.",
+            "🔭 Johannes Kepler (1571-1630): Formuló las tres leyes del movimiento planetario.",
+            "🌕 20 de julio de 1969: Neil Armstrong y Buzz Aldrin caminan sobre la Luna.",
+            "⭐ Galileo Galilei (1564-1642): Mejoró el telescopio y descubrió las lunas de Júpiter.",
+            "🚀 12 de abril de 1961: Yuri Gagarin se convierte en el primer ser humano en el espacio.",
+            "🪐 William Herschel (1738-1822): Descubrió Urano y la radiación infrarroja.",
+            "☄️ 30 de junio de 1908: Evento de Tunguska, explosión de un meteorito en Siberia.",
+            "👩‍🚀 Valentina Tereshkova: Primera mujer en el espacio (16 de junio de 1963).",
+            "🌌 Edwin Hubble (1889-1953): Demostró la expansión del universo.",
+            "🛰️ 24 de diciembre de 1968: La misión Apolo 8 orbita la Luna por primera vez."
+        ];
+        let efemerideIndex = 0;
+        function rotarEfemerides() {
+            const el = document.getElementById('efemeridesText');
+            if (el) {
+                el.textContent = efemerides[efemerideIndex];
+                efemerideIndex = (efemerideIndex + 1) % efemerides.length;
+            }
+        }
+        setInterval(rotarEfemerides, 10000);
+        
+        // ==================== SINCRONIZACIÓN CON JSONBIN ====================
+        async function cargarDatosNube() {
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': CONFIG.JSONBIN_API_KEY }
+                });
+                if (!res.ok) throw new Error('Error al cargar');
+                const data = await res.json();
+                const record = data.record;
+                rankingDiario = record.ranking || [];
+                gameRanking = record.gameRanking || [];
+                customNews = record.news || [];
+                visitas = record.visitas || { total: 0, hoy: 0, fechaHoy: '' };
+                verificarReinicioDiario();
+                actualizarContadorVisitas();
+            } catch(e) {
+                console.warn('Usando datos locales');
+                const localData = JSON.parse(localStorage.getItem('cloudDataBackup')) || {};
+                rankingDiario = localData.ranking || [];
+                gameRanking = localData.gameRanking || [];
+                customNews = localData.news || [];
+                visitas = localData.visitas || { total: 0, hoy: 0, fechaHoy: '' };
+                verificarReinicioDiario();
+                actualizarContadorVisitas();
+            }
+        }
+        
+        function verificarReinicioDiario() {
+            const hoy = new Date().toLocaleDateString('es-VE');
+            if (visitas.fechaHoy !== hoy) {
+                visitas.hoy = 0;
+                visitas.fechaHoy = hoy;
+            }
+            if (!rankingDiario.length || (rankingDiario[0]?.fecha && rankingDiario[0].fecha !== hoy)) {
+                rankingDiario = [];
+            }
+            // El ranking del juego no se reinicia diariamente (es histórico), pero puedes cambiarlo si quieres.
+        }
+        
+        function actualizarContadorVisitas() {
+            const hoy = new Date().toLocaleDateString('es-VE');
+            if (visitas.fechaHoy !== hoy) {
+                visitas.hoy = 1;
+                visitas.fechaHoy = hoy;
+            } else {
+                visitas.hoy += 1;
+            }
+            visitas.total += 1;
+            guardarDatosNube();
+            mostrarVisitas();
+        }
+        
+        function mostrarVisitas() {
+            document.getElementById('visitasTotales').textContent = visitas.total;
+            document.getElementById('visitasHoy').textContent = visitas.hoy;
+        }
+        
+        async function guardarDatosNube() {
+            const record = { ranking: rankingDiario, gameRanking: gameRanking, news: customNews, visitas: visitas };
+            localStorage.setItem('cloudDataBackup', JSON.stringify(record));
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': CONFIG.JSONBIN_API_KEY
+                    },
+                    body: JSON.stringify(record)
+                });
+            } catch(e) {
+                console.error('Error guardando en nube');
+            }
+        }
+        
+        // ==================== MODO OSCURO ====================
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-mode');
+            themeToggle.querySelector('svg').innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" fill="currentColor"/>';
+        }
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            const svg = themeToggle.querySelector('svg');
+            svg.innerHTML = isDark ? '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" fill="currentColor"/>' : '<path d="M12 3v1m0 16v1m9-9h-1m-16 0H3m15.32-6.32l-.71-.71M5.38 18.38l-.71-.71M18.32 18.32l-.71-.71M5.38 5.38l-.71-.71M12 7a5 5 0 100 10 5 5 0 000-10z" stroke="currentColor" stroke-width="2" fill="none"/>';
+        });
+        
+        // ==================== PESTAÑAS ====================
+        const tabs = document.querySelectorAll('.tab-btn');
+        const contents = document.querySelectorAll('.tab-content');
+        tabs.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+                contents.forEach(c => c.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                tabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        
+        // ==================== ADMIN ====================
+        function checkAdminAndShowUI() {
+            document.querySelectorAll('.edit-btn').forEach(el => el.remove());
+            if (isAdmin) {
+                document.getElementById('adminBtn').textContent = '👑 Admin (activo)';
+                document.querySelectorAll('[data-editable]').forEach(card => {
+                    const btn = document.createElement('button');
+                    btn.className = 'edit-btn';
+                    btn.innerHTML = '✏️';
+                    btn.addEventListener('click', (e) => { e.stopPropagation(); openTextEditor(card); });
+                    card.style.position = 'relative';
+                    card.appendChild(btn);
+                });
+                document.getElementById('adminNewsPanel').style.display = 'block';
+                document.getElementById('adminVisitasPanel').style.display = 'block';
+                mostrarVisitas();
+            } else {
+                document.getElementById('adminBtn').textContent = '👑 Admin';
+                document.getElementById('adminNewsPanel').style.display = 'none';
+                document.getElementById('adminVisitasPanel').style.display = 'none';
+            }
+            cargarNoticias();
+            mostrarRanking();
+            mostrarRankingJuego();
+        }
+        
+        let currentEditContext = null;
+        function openTextEditor(card) {
+            const key = card.dataset.editable;
+            let html = Array.from(card.querySelectorAll('.editable-text')).map(el => el.innerHTML).join('\n---\n');
+            document.getElementById('editModalTitle').textContent = `Editar ${key}`;
+            document.getElementById('editModalFields').innerHTML = `<textarea id="editTextArea" rows="10">${html.replace(/"/g, '&quot;')}</textarea>`;
+            currentEditContext = { type: 'card', key, card };
+            document.getElementById('editModal').style.display = 'flex';
+        }
+        document.getElementById('saveEditBtn').addEventListener('click', () => {
+            if (!currentEditContext) return;
+            const newHTML = document.getElementById('editTextArea').value;
+            const parts = newHTML.split('\n---\n');
+            const texts = currentEditContext.card.querySelectorAll('.editable-text');
+            texts.forEach((el, i) => { if (i < parts.length) el.innerHTML = parts[i]; });
+            siteContent[currentEditContext.key] = parts;
+            localStorage.setItem('siteContent', JSON.stringify(siteContent));
+            document.getElementById('editModal').style.display = 'none';
+        });
+        document.getElementById('cancelEditBtn').addEventListener('click', () => {
+            document.getElementById('editModal').style.display = 'none';
+        });
+        
+        document.getElementById('adminBtn').addEventListener('click', () => {
+            if (isAdmin) { isAdmin = false; checkAdminAndShowUI(); }
+            else document.getElementById('loginModal').style.display = 'flex';
+        });
+        document.getElementById('cancelLoginBtn').addEventListener('click', () => document.getElementById('loginModal').style.display = 'none');
+        document.getElementById('confirmLoginBtn').addEventListener('click', () => {
+            const u = document.getElementById('adminUser').value.trim();
+            const p = document.getElementById('adminPass').value;
+            if (ADMIN_CREDS.some(c => c.user === u && c.pass === p)) {
+                isAdmin = true;
+                document.getElementById('loginModal').style.display = 'none';
+                checkAdminAndShowUI();
+            } else {
+                document.getElementById('loginError').textContent = 'Credenciales incorrectas';
+            }
+        });
+        
+        // ==================== NOTICIAS ====================
+        function cargarNoticias() {
+            const container = document.getElementById('customNewsContainer');
+            if (!customNews.length) {
+                const curiosos = ["🌞 El Sol es 109 veces más grande que la Tierra.", "🌕 Un día en Venus dura más que un año.", "🪐 Júpiter tiene 79 lunas."];
+                let html = '<div class="news-grid">';
+                curiosos.forEach(d => { html += `<div class="news-card"><div class="news-content"><p>${d}</p></div></div>`; });
+                html += '</div>';
+                container.innerHTML = html;
+                return;
+            }
+            let html = '<div class="news-grid">';
+            customNews.forEach((n, i) => {
+                html += `<div class="news-card">
+                    ${isAdmin ? `<div class="news-actions"><button class="edit-news-btn" data-index="${i}">✏️</button><button class="delete-news-btn" data-index="${i}">✕</button></div>` : ''}
+                    ${n.img ? `<img src="${n.img}" class="news-img">` : ''}
+                    <div class="news-content"><div class="news-title">${n.title}</div><p>${n.desc}</p><a href="${n.link}" target="_blank" class="read-more">Leer más →</a></div>
+                </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            if (isAdmin) {
+                document.querySelectorAll('.edit-news-btn').forEach(b => b.addEventListener('click', e => editarNoticia(b.dataset.index)));
+                document.querySelectorAll('.delete-news-btn').forEach(b => b.addEventListener('click', e => {
+                    customNews.splice(b.dataset.index, 1);
+                    guardarDatosNube();
+                    cargarNoticias();
+                }));
+            }
+        }
+        function editarNoticia(idx = null) {
+            const n = idx !== null ? customNews[idx] : null;
+            document.getElementById('newsTitle').value = n ? n.title : '';
+            document.getElementById('newsDesc').value = n ? n.desc : '';
+            document.getElementById('newsImgUrl').value = n ? (n.img || '') : '';
+            document.getElementById('newsLink').value = n ? n.link : '';
+            document.getElementById('editingNewsId').value = idx !== null ? idx : '';
+        }
+        document.getElementById('saveNewsBtn').addEventListener('click', async () => {
+            const title = document.getElementById('newsTitle').value.trim();
+            const desc = document.getElementById('newsDesc').value.trim();
+            const img = document.getElementById('newsImgUrl').value.trim();
+            const link = document.getElementById('newsLink').value.trim();
+            if (!title || !desc) return alert('Título y descripción obligatorios');
+            const editingId = document.getElementById('editingNewsId').value;
+            const newsItem = { title, desc, img: img || null, link: link || '#' };
+            if (editingId !== '') customNews[editingId] = newsItem;
+            else customNews.push(newsItem);
+            await guardarDatosNube();
+            cargarNoticias();
+            document.getElementById('newsTitle').value = '';
+            document.getElementById('newsDesc').value = '';
+            document.getElementById('newsImgUrl').value = '';
+            document.getElementById('newsLink').value = '';
+            document.getElementById('editingNewsId').value = '';
+        });
+        document.getElementById('cancelNewsEditBtn').addEventListener('click', () => {
+            document.getElementById('newsTitle').value = '';
+            document.getElementById('newsDesc').value = '';
+            document.getElementById('newsImgUrl').value = '';
+            document.getElementById('newsLink').value = '';
+            document.getElementById('editingNewsId').value = '';
+        });
+        
+        // ==================== APOD ====================
+        async function cargarAPOD() {
+            const c = document.getElementById('apodContainer');
+            try {
+                const res = await fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY');
+                const data = await res.json();
+                c.innerHTML = `<div style="text-align:center;"><img src="${data.url}" style="max-width:100%; border-radius:20px;"><h3>${data.title}</h3><p>${data.explanation}</p></div>`;
+            } catch(e) { c.innerHTML = '<div class="result">No se pudo cargar</div>'; }
+        }
+        
+        // ==================== SIMULADOR ====================
+        const canvasSim = document.getElementById('simuladorCanvas');
+        const ctx = canvasSim.getContext('2d');
+        let dist = 384000, ang = 0, vel = 0.01;
+        function actVel() {
+            let r = dist / 384000;
+            vel = Math.min(0.08, Math.max(0.002, 0.01 * Math.pow(1/r, 1.5)));
+            let per = 27.3 * Math.pow(dist/384000, 1.5);
+            let v = (2 * Math.PI * dist) / (per * 86400);
+            document.getElementById('infoVelocidad').innerHTML = `Vel: ${v.toFixed(2)} km/s | Per: ${per.toFixed(1)} días`;
+        }
+        function dibujar() {
+            const w = 600, h = 300;
+            ctx.clearRect(0,0,w,h);
+            ctx.fillStyle = '#4cafaa'; ctx.beginPath(); ctx.arc(w/2,h/2,35,0,2*Math.PI); ctx.fill();
+            ctx.fillStyle = '#2e7d64'; ctx.beginPath(); ctx.arc(w/2,h/2,25,0,2*Math.PI); ctx.fill();
+            let r = Math.min(250, dist/1600);
+            ctx.beginPath(); ctx.arc(w/2,h/2,r,0,2*Math.PI); ctx.strokeStyle='#ffb347'; ctx.setLineDash([5,8]); ctx.stroke(); ctx.setLineDash([]);
+            let lx = w/2 + r*Math.cos(ang), ly = h/2 + r*Math.sin(ang);
+            ctx.fillStyle = '#ddd'; ctx.beginPath(); ctx.arc(lx,ly,12,0,2*Math.PI); ctx.fill();
+            ang += vel; requestAnimationFrame(dibujar);
+        }
+        canvasSim.width=600; canvasSim.height=300; dibujar();
+        document.getElementById('distanciaLuna').addEventListener('input', e => {
+            dist = e.target.value * 1000;
+            document.getElementById('distanciaValor').innerText = dist.toLocaleString() + ' km';
+            actVel();
+        });
+        actVel();
+        
+        // ==================== CALCULADORAS ====================
+        function calcTelescopio() {
+            let D = +document.getElementById('diametroCalc').value;
+            let F = +document.getElementById('focalCalc').value;
+            let o = +document.getElementById('ocularCalc').value;
+            if(isNaN(D)||isNaN(F)||isNaN(o)) return;
+            let aum = F/o;
+            let mag = 2.5*Math.log10(D)+7.5;
+            let campo = (50/aum).toFixed(1);
+            document.getElementById('resultadoCalc').innerHTML = `🔍 Aumento: ${aum.toFixed(0)}x | ⭐ Mag lím: ${mag.toFixed(1)} | 🌙 Campo: ${campo}°`;
+        }
+        document.getElementById('calcTelescopioBtn').addEventListener('click', calcTelescopio);
+        calcTelescopio();
+        
+        function convertir() {
+            let ua = +document.getElementById('ua').value;
+            if(!isNaN(ua)) {
+                let km = ua * 149597870.7;
+                let pc = ua / 206264.8;
+                let ly = ua / 63241.1;
+                document.getElementById('km').value = km.toExponential(4);
+                document.getElementById('pc').value = pc.toExponential(4);
+                document.getElementById('ly').value = ly.toExponential(4);
+                document.getElementById('resultConversor').innerHTML = `${ua} UA = ${km.toFixed(0)} km = ${pc.toExponential(4)} pc = ${ly.toExponential(4)} ly`;
+            }
+        }
+        document.getElementById('convertirAstro').addEventListener('click', convertir);
+        convertir();
+        
+        // ==================== PLANETAS ====================
+        const pCanvas = document.getElementById('planetsCanvas');
+        const pCtx = pCanvas.getContext('2d');
+        const planets = [
+            { name: 'Mercurio', r: 40, c: '#b08d6e', s: 0.04, a: 0, sz: 6 },
+            { name: 'Venus', r: 60, c: '#e6b800', s: 0.025, a: 1.2, sz: 8 },
+            { name: 'Tierra', r: 80, c: '#4cafaa', s: 0.02, a: 2.5, sz: 9 },
+            { name: 'Marte', r: 100, c: '#c4554c', s: 0.016, a: 3, sz: 7 },
+            { name: 'Júpiter', r: 150, c: '#c0a080', s: 0.009, a: 4.2, sz: 16 },
+            { name: 'Saturno', r: 190, c: '#e8cfb0', s: 0.007, a: 5.1, sz: 14 },
+            { name: 'Urano', r: 230, c: '#6fd4d4', s: 0.005, a: 6.0, sz: 12 },
+            { name: 'Neptuno', r: 270, c: '#4169e1', s: 0.004, a: 0.5, sz: 12 }
+        ];
+        function drawPlanets() {
+            const w = 500, h = 500;
+            pCtx.clearRect(0,0,w,h);
+            pCtx.fillStyle='#ffcc44'; pCtx.beginPath(); pCtx.arc(w/2,h/2,22,0,2*Math.PI); pCtx.fill();
+            planets.forEach(p => {
+                let x = w/2 + p.r*Math.cos(p.a), y = h/2 + p.r*Math.sin(p.a);
+                pCtx.fillStyle=p.c; pCtx.beginPath(); pCtx.arc(x,y,p.sz,0,2*Math.PI); pCtx.fill();
+                pCtx.fillStyle='#fff'; pCtx.font='bold 12px monospace'; pCtx.fillText(p.name,x-15,y-10);
+                p.a += p.s;
+            });
+            requestAnimationFrame(drawPlanets);
+        }
+        pCanvas.width=500; pCanvas.height=500; drawPlanets();
+        
+        // ==================== IA ====================
+        const chatBox = document.getElementById('chatBox');
+        function addMsg(t, user) {
+            const d = document.createElement('div');
+            d.className = `chat-msg ${user?'user-msg':'bot-msg'}`;
+            d.innerHTML = t; chatBox.appendChild(d); chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        document.getElementById('askBtn').addEventListener('click', async () => {
+            const q = document.getElementById('userQuestion').value.trim();
+            if(!q) return;
+            addMsg(q, true);
+            addMsg('🤔 Pensando...', false);
+            const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent('Eres experto en astronomía. Responde en español: '+q)}`);
+            const txt = await res.text();
+            chatBox.removeChild(chatBox.lastChild);
+            addMsg(txt, false);
+            document.getElementById('userQuestion').value = '';
+        });
+        
+        // ==================== CUESTIONARIO (100 PREGUNTAS ÚNICAS) ====================
+        let currentPlayer = '', currentScore = 0, availableQuestions = [], currentQuestion = null, answered = false, quizActive = false;
+        function generateQuestionBank() {
+            const bank = [];
+            const planetas = ["Mercurio", "Venus", "Tierra", "Marte", "Júpiter", "Saturno", "Urano", "Neptuno"];
+            const respuestasPlanetas = ["Es el planeta más cercano al Sol.", "Tiene una atmósfera densa de CO2.", "Nuestro hogar, el único con vida.", "El planeta rojo con el Monte Olimpo.", "Gigante gaseoso con la Gran Mancha Roja.", "Famoso por sus anillos.", "Gigante de hielo que rota de lado.", "El planeta más ventoso."];
+            for (let i=0; i<100; i++) {
+                if (i < 50) {
+                    const idx = i % planetas.length;
+                    const opts = [respuestasPlanetas[idx], ...respuestasPlanetas.filter((_,j) => j!==idx).slice(0,3)];
+                    bank.push({ q: `¿Cuál es la característica principal de ${planetas[idx]}?`, opts: opts, ans: 0 });
+                } else {
+                    const extras = [
+                        { q: "¿Cuál es la estrella más cercana a la Tierra?", opts: ["Próxima Centauri", "Sirio", "El Sol", "Alfa Centauri"], ans: 2 },
+                        { q: "¿En qué año llegó el ser humano a la Luna?", opts: ["1965", "1969", "1972", "1958"], ans: 1 },
+                        { q: "¿Qué tipo de galaxia es la Vía Láctea?", opts: ["Elíptica", "Espiral", "Irregular", "Lenticular"], ans: 1 },
+                        { q: "¿Qué es un año luz?", opts: ["Medida de tiempo", "Distancia que recorre la luz en un año", "Edad del universo", "Velocidad de la luz"], ans: 1 },
+                        { q: "¿Cuál es el planeta más caliente?", opts: ["Mercurio", "Venus", "Tierra", "Marte"], ans: 1 }
+                    ];
+                    const idx = i % extras.length;
+                    bank.push(extras[idx]);
+                }
+            }
+            return bank.slice(0,100);
+        }
+        const questionBank = generateQuestionBank();
+        function shuffleArray(arr) { for (let i=arr.length-1; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+        function startQuiz() {
+            const name = document.getElementById('playerName').value.trim();
+            if (!name) { alert('Ingresa tu nombre'); return; }
+            currentPlayer = name; currentScore = 0;
+            availableQuestions = shuffleArray([...questionBank]);
+            quizActive = true;
+            document.getElementById('displayName').textContent = name;
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('quizSection').style.display = 'block';
+            document.getElementById('quizMessage').style.display = 'none';
+            document.getElementById('nextQuestionBtn').style.display = 'none';
+            loadNextQuestion();
+        }
+        function loadNextQuestion() {
+            if (!quizActive) return;
+            answered = false;
+            if (availableQuestions.length === 0) {
+                quizActive = false;
+                document.getElementById('quizMessage').style.display = 'block';
+                document.getElementById('quizMessage').innerHTML = '🏆 ¡FELICIDADES! ¡Eres un maestro de la astronomía! Has completado las 100 preguntas sin errores.';
+                document.getElementById('nextQuestionBtn').style.display = 'none';
+                actualizarRanking(currentPlayer, 100);
+                document.getElementById('quizSection').style.display = 'none';
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('playerName').value = '';
+                return;
+            }
+            currentQuestion = availableQuestions.shift();
+            document.getElementById('questionText').textContent = currentQuestion.q;
+            document.getElementById('currentQuestionNumber').textContent = 100 - availableQuestions.length;
+            document.getElementById('progressFill').style.width = ((100 - availableQuestions.length) / 100 * 100) + '%';
+            const optsContainer = document.getElementById('optionsContainer');
+            optsContainer.innerHTML = '';
+            const optsWithIndex = currentQuestion.opts.map((text, idx) => ({ text, idx }));
+            shuffleArray(optsWithIndex);
+            optsWithIndex.forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'question-option';
+                div.textContent = opt.text;
+                div.dataset.opt = opt.idx;
+                div.addEventListener('click', () => handleAnswer(opt.idx, div));
+                optsContainer.appendChild(div);
+            });
+        }
+        function handleAnswer(selectedIdx, element) {
+            if (answered || !quizActive) return;
+            answered = true;
+            const isCorrect = (selectedIdx === currentQuestion.ans);
+            document.querySelectorAll('.question-option').forEach(opt => opt.style.pointerEvents = 'none');
+            if (isCorrect) {
+                element.classList.add('correct-feedback');
+                currentScore++;
+                document.getElementById('nextQuestionBtn').style.display = 'block';
+            } else {
+                element.classList.add('wrong-feedback');
+                document.getElementById('quizMessage').style.display = 'block';
+                document.getElementById('quizMessage').innerHTML = '❌ FALLIDO. Debes empezar de cero.';
+                quizActive = false;
+                setTimeout(() => {
+                    document.getElementById('quizSection').style.display = 'none';
+                    document.getElementById('loginSection').style.display = 'block';
+                    document.getElementById('playerName').value = '';
+                }, 1500);
+            }
+        }
+        function actualizarRanking(nombre, puntaje) {
+            const hoy = new Date().toLocaleDateString('es-VE');
+            const index = rankingDiario.findIndex(r => r.nombre.toLowerCase() === nombre.toLowerCase());
+            if (index !== -1) { if (puntaje > rankingDiario[index].puntaje) rankingDiario[index].puntaje = puntaje; }
+            else rankingDiario.push({ nombre, puntaje, fecha: hoy });
+            rankingDiario.sort((a,b) => b.puntaje - a.puntaje);
+            rankingDiario = rankingDiario.slice(0,10);
+            guardarDatosNube();
+            mostrarRanking();
+        }
+        function mostrarRanking() {
+            const list = document.getElementById('rankingList');
+            if (!rankingDiario.length) { list.innerHTML = '<li>Aún no hay puntajes hoy. ¡Sé el primero!</li>'; return; }
+            list.innerHTML = rankingDiario.map((r,i) => `<li class="${i===0?'champion':''}"><span>${i+1}. ${r.nombre}</span><span>${r.puntaje} pts</span></li>`).join('');
+        }
+        document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
+        document.getElementById('nextQuestionBtn').addEventListener('click', () => { if(quizActive) { document.getElementById('nextQuestionBtn').style.display='none'; loadNextQuestion(); } });
+        
+        // ==================== JUEGO DE ASTEROIDES ====================
+        const gameCanvas = document.getElementById('gameCanvas');
+        const gCtx = gameCanvas.getContext('2d');
+        const gameScoreSpan = document.getElementById('gameScoreDisplay');
+        const startBtn = document.getElementById('startGameBtn');
+        const restartBtn = document.getElementById('restartGameBtn');
+        let audioCtx;
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function playSound(type) {
+            if (!audioCtx) initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            if (type === 'shoot') { osc.frequency.value = 880; gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.1); osc.start(); osc.stop(now+0.1); }
+            else if (type === 'explosion') { osc.type = 'sawtooth'; osc.frequency.value = 150; gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.2); osc.start(); osc.stop(now+0.2); }
+        }
+        let ship = { x:400, y:400, vx:0, vy:0, angle:0, active:true };
+        let bullets = [], enemies = [], asteroids = [];
+        let gameScore = 0, gameRunning = false, gameLoopId = null, gameTime = 0;
+        function resetGame() {
+            ship = { x:400, y:400, vx:0, vy:0, angle:0, active:true };
+            bullets=[]; enemies=[]; asteroids=[]; gameScore=0; gameTime=0;
+            gameScoreSpan.textContent='0';
+            for(let i=0;i<2;i++) asteroids.push({ x:100+Math.random()*600, y:100+Math.random()*600, vx:(Math.random()-0.5)*0.8, vy:(Math.random()-0.5)*0.8, size:20+Math.random()*15 });
+            gameRunning=true; startBtn.style.display='none'; restartBtn.style.display='inline-block';
+            if(gameLoopId) cancelAnimationFrame(gameLoopId);
+            gameLoopId = requestAnimationFrame(gameFrame);
+        }
+        function stopGame() { gameRunning=false; startBtn.style.display='inline-block'; restartBtn.style.display='none'; }
+        function drawShip() { if(!ship.active) return; gCtx.save(); gCtx.translate(ship.x, ship.y); gCtx.rotate(ship.angle); gCtx.strokeStyle='white'; gCtx.lineWidth=2; gCtx.beginPath(); gCtx.moveTo(15,0); gCtx.lineTo(-10,-10); gCtx.lineTo(-5,0); gCtx.lineTo(-10,10); gCtx.closePath(); gCtx.stroke(); gCtx.restore(); }
+        function drawBullets() { gCtx.fillStyle='yellow'; bullets.forEach(b=>{ gCtx.beginPath(); gCtx.arc(b.x,b.y,3,0,2*Math.PI); gCtx.fill(); }); }
+        function drawEnemies() { enemies.forEach(e=>{ if(e.type==='shooter'){ gCtx.save(); gCtx.translate(e.x,e.y); gCtx.rotate(e.angle); gCtx.fillStyle='#e94560'; gCtx.beginPath(); gCtx.moveTo(e.size,0); gCtx.lineTo(-e.size*0.7,-e.size*0.7); gCtx.lineTo(-e.size*0.7,e.size*0.7); gCtx.closePath(); gCtx.fill(); gCtx.restore(); } else { gCtx.fillStyle='#ff8c00'; gCtx.beginPath(); gCtx.arc(e.x,e.y,e.size,0,2*Math.PI); gCtx.fill(); } }); }
+        function drawAsteroids() { gCtx.strokeStyle='#aaa'; gCtx.lineWidth=2; asteroids.forEach(a=>{ gCtx.beginPath(); gCtx.arc(a.x,a.y,a.size,0,2*Math.PI); gCtx.stroke(); }); }
+        function updateGame() {
+            if(!gameRunning) return;
+            gameTime += 1/60;
+            if(gameTime>30 && gameTime<=60) { if(Math.random()<0.005 && enemies.filter(e=>e.type==='splitter').length<2) enemies.push({ type:'splitter', x:Math.random()*800, y:Math.random()*800, vx:(Math.random()-0.5)*1.0, vy:(Math.random()-0.5)*1.0, size:25 }); }
+            else if(gameTime>60) { const maxShooters = gameTime>90?3:1; if(Math.random()<0.003 && enemies.filter(e=>e.type==='shooter').length<maxShooters) enemies.push({ type:'shooter', x:Math.random()*800, y:Math.random()*800, vx:(Math.random()-0.5)*0.8, vy:(Math.random()-0.5)*0.8, size:18, angle:0, shootCooldown:20 }); if(Math.random()<0.005 && enemies.filter(e=>e.type==='splitter').length<3) enemies.push({ type:'splitter', x:Math.random()*800, y:Math.random()*800, vx:(Math.random()-0.5)*1.2, vy:(Math.random()-0.5)*1.2, size:22 }); }
+            if(Math.random()<0.01+gameTime/3000) asteroids.push({ x:Math.random()*800, y:Math.random()*800, vx:(Math.random()-0.5)*(1+gameTime/200), vy:(Math.random()-0.5)*(1+gameTime/200), size:15+Math.random()*25 });
+            if(ship.active) { ship.x+=ship.vx; ship.y+=ship.vy; if(ship.x<0) ship.x=800; if(ship.x>800) ship.x=0; if(ship.y<0) ship.y=800; if(ship.y>800) ship.y=0; ship.vx*=0.98; ship.vy*=0.98; }
+            bullets = bullets.filter(b=>{ b.x+=b.vx; b.y+=b.vy; return (b.x>=0 && b.x<=800 && b.y>=0 && b.y<=800); });
+            enemies.forEach(e=>{ e.x+=e.vx; e.y+=e.vy; if(e.x<0) e.x=800; if(e.x>800) e.x=0; if(e.y<0) e.y=800; if(e.y>800) e.y=0; if(e.type==='shooter'){ if(ship.active) e.angle = Math.atan2(ship.y-e.y, ship.x-e.x); e.shootCooldown--; if(e.shootCooldown<=0 && ship.active){ bullets.push({ x:e.x+e.size*Math.cos(e.angle), y:e.y+e.size*Math.sin(e.angle), vx:2*Math.cos(e.angle), vy:2*Math.sin(e.angle), enemyBullet:true }); e.shootCooldown=60; } } });
+            asteroids.forEach(a=>{ a.x+=a.vx; a.y+=a.vy; if(a.x<0) a.x=800; if(a.x>800) a.x=0; if(a.y<0) a.y=800; if(a.y>800) a.y=0; });
+            for(let i=bullets.length-1;i>=0;i--) { const b=bullets[i]; for(let j=asteroids.length-1;j>=0;j--) { const a=asteroids[j]; if(Math.hypot(b.x-a.x,b.y-a.y)<a.size) { bullets.splice(i,1); asteroids.splice(j,1); gameScore+=10; gameScoreSpan.textContent=gameScore; playSound('explosion'); break; } } }
+            for(let i=bullets.length-1;i>=0;i--) { const b=bullets[i]; if(b.enemyBullet) continue; for(let j=enemies.length-1;j>=0;j--) { const e=enemies[j]; if(Math.hypot(b.x-e.x,b.y-e.y)<e.size+5) { bullets.splice(i,1); if(e.type==='splitter'){ playSound('explosion'); gameScore+=20; gameScoreSpan.textContent=gameScore; if(e.size>8){ for(let k=0;k<2;k++) enemies.push({ type:'splitter', x:e.x, y:e.y, vx:e.vx+(Math.random()-0.5)*2, vy:e.vy+(Math.random()-0.5)*2, size:e.size*0.7 }); } enemies.splice(j,1); } else { playSound('explosion'); gameScore+=30; gameScoreSpan.textContent=gameScore; enemies.splice(j,1); } break; } } }
+            if(ship.active) { for(let a of asteroids) if(Math.hypot(ship.x-a.x,ship.y-a.y)<a.size+10) { ship.active=false; gameRunning=false; stopGame(); guardarPuntuacionJuego(); break; } for(let e of enemies) if(Math.hypot(ship.x-e.x,ship.y-e.y)<e.size+10) { ship.active=false; gameRunning=false; stopGame(); guardarPuntuacionJuego(); break; } for(let b of bullets) if(b.enemyBullet && Math.hypot(ship.x-b.x,ship.y-b.y)<12) { ship.active=false; gameRunning=false; stopGame(); guardarPuntuacionJuego(); break; } }
+        }
+        function drawGame() { gCtx.fillStyle='#0a1a2a'; gCtx.fillRect(0,0,800,800); drawAsteroids(); drawEnemies(); drawBullets(); drawShip(); if(!ship.active) { gCtx.fillStyle='white'; gCtx.font='bold 24px sans-serif'; gCtx.textAlign='center'; gCtx.fillText('¡GAME OVER!',400,400); } }
+        function gameFrame() { updateGame(); drawGame(); gameLoopId=requestAnimationFrame(gameFrame); }
+        function guardarPuntuacionJuego() {
+            let nombre = prompt('¡Fin del juego! Ingresa tu nombre para el ranking:', 'Anónimo'); if(!nombre) nombre='Anónimo';
+            gameRanking.push({ nombre, puntaje: gameScore, fecha: new Date().toLocaleDateString() });
+            gameRanking.sort((a,b)=>b.puntaje-a.puntaje); gameRanking = gameRanking.slice(0,10);
+            guardarDatosNube(); mostrarRankingJuego();
+        }
+        function mostrarRankingJuego() {
+            const list = document.getElementById('gameRankingList');
+            if(!gameRanking.length) { list.innerHTML = '<li>Aún no hay puntajes.</li>'; return; }
+            list.innerHTML = gameRanking.map((r,i)=>`<li><span>${i+1}. ${r.nombre}</span><span>${r.puntaje} pts</span></li>`).join('');
+        }
+        // Controles táctiles (Joystick)
+        let joystickActive=false, joystickStartX=0, joystickStartY=0;
+        const joystickZone = document.getElementById('joystickZone');
+        const shootZone = document.getElementById('shootZone');
+        function handleJoystickStart(e) { e.preventDefault(); const touch=e.touches[0]; joystickActive=true; joystickStartX=touch.clientX; joystickStartY=touch.clientY; }
+        function handleJoystickMove(e) {
+            e.preventDefault(); if(!joystickActive) return;
+            const touch=e.touches[0]; const dx=touch.clientX-joystickStartX; const dy=touch.clientY-joystickStartY; const dist=Math.hypot(dx,dy);
+            if(dist>20) { const normX=dx/dist, normY=dy/dist; if(gameRunning && ship.active) { ship.angle += normX*0.1; if(normY<-0.3) { const thrust=Math.min(1,-normY); ship.vx += 0.3*thrust*Math.cos(ship.angle); ship.vy += 0.3*thrust*Math.sin(ship.angle); } } }
+        }
+        function handleJoystickEnd(e) { e.preventDefault(); joystickActive=false; }
+        function handleShoot(e) { e.preventDefault(); if(gameRunning && ship.active) { bullets.push({ x:ship.x+15*Math.cos(ship.angle), y:ship.y+15*Math.sin(ship.angle), vx:ship.vx+5*Math.cos(ship.angle), vy:ship.vy+5*Math.sin(ship.angle) }); playSound('shoot'); } }
+        if(joystickZone) { joystickZone.addEventListener('touchstart',handleJoystickStart); joystickZone.addEventListener('touchmove',handleJoystickMove); joystickZone.addEventListener('touchend',handleJoystickEnd); joystickZone.addEventListener('touchcancel',handleJoystickEnd); }
+        if(shootZone) { let shootInterval; shootZone.addEventListener('touchstart',(e)=>{ e.preventDefault(); if(gameRunning && ship.active) { handleShoot(e); shootInterval=setInterval(()=>handleShoot(e),150); } }); shootZone.addEventListener('touchend',(e)=>{ e.preventDefault(); clearInterval(shootInterval); }); shootZone.addEventListener('touchcancel',(e)=>{ e.preventDefault(); clearInterval(shootInterval); }); }
+        // Controles PC
+        const keys = {};
+        window.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return; if(e.key===' ') { e.preventDefault(); if(gameRunning && ship.active) { bullets.push({ x:ship.x+15*Math.cos(ship.angle), y:ship.y+15*Math.sin(ship.angle), vx:ship.vx+5*Math.cos(ship.angle), vy:ship.vy+5*Math.sin(ship.angle) }); playSound('shoot'); } } keys[e.key]=true; });
+        window.addEventListener('keyup',e=>{ keys[e.key]=false; });
+        function handleShipControls() { if(!gameRunning || !ship.active) return; if(keys['ArrowLeft']) ship.angle-=0.1; if(keys['ArrowRight']) ship.angle+=0.1; if(keys['ArrowUp']) { ship.vx+=0.2*Math.cos(ship.angle); ship.vy+=0.2*Math.sin(ship.angle); } }
+        setInterval(handleShipControls,20);
+        document.getElementById('fullscreenBtn').addEventListener('click',()=>{ if(!document.fullscreenElement) document.querySelector('.game-container').requestFullscreen(); else document.exitFullscreen(); });
+        startBtn.addEventListener('click',resetGame); restartBtn.addEventListener('click',resetGame);
+        
+        // ==================== INICIALIZACIÓN ====================
+        (async function init() {
+            await cargarDatosNube();
+            for (let key in siteContent) { const card = document.querySelector(`[data-editable="${key}"]`); if(card && siteContent[key]) { const texts = card.querySelectorAll('.editable-text'); texts.forEach((el,i)=>{ if(siteContent[key][i]) el.innerHTML = siteContent[key][i]; }); } }
+            cargarGaleriaSistemaSolar();
+            cargarNoticias();
+            rotarEfemerides();
+            mostrarRanking();
+            mostrarRankingJuego();
+            cargarAPOD();
+            checkAdminAndShowUI();
+            actualizarContadorVisitas();
+            drawGame();
+            document.body.addEventListener('click', ()=>{ if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); }, { once: true });
+        })();
+    })();
+</script>
+</body>
+</html>
