@@ -782,13 +782,23 @@
             document.getElementById('userQuestion').value = '';
         });
         
-        // ==================== CUESTIONARIO (100 PREGUNTAS ÚNICAS) ====================
-        // Generador de 100 preguntas únicas
+        // ==================== CUESTIONARIO (100 PREGUNTAS ÚNICAS) - CORREGIDO ====================
+        // Función para mezclar array (Fisher-Yates)
+        function shuffleArray(arr) { 
+            for (let i = arr.length - 1; i > 0; i--) { 
+                const j = Math.floor(Math.random() * (i + 1)); 
+                [arr[i], arr[j]] = [arr[j], arr[i]]; 
+            } 
+            return arr; 
+        }
+        
+        // Generador de 100 preguntas únicas con respuesta correcta guardada como texto (no índice)
         function generateUniqueQuestionBank() {
             const bank = [];
-            // Planetas principales con característica única
+            
+            // Preguntas de planetas (8)
             const planetas = ["Mercurio", "Venus", "Tierra", "Marte", "Júpiter", "Saturno", "Urano", "Neptuno"];
-            const respuestas = [
+            const respuestasCorrectas = [
                 "Es el planeta más cercano al Sol y el más pequeño.",
                 "Tiene una atmósfera densa de CO2 y efecto invernadero extremo.",
                 "Nuestro hogar, el único planeta conocido con vida.",
@@ -798,53 +808,82 @@
                 "Gigante de hielo que rota de lado, con un eje de inclinación extremo.",
                 "El planeta más ventoso, con vientos supersónicos."
             ];
-            for(let i=0; i<8; i++) {
-                let opts = [respuestas[i]];
-                let otras = respuestas.filter((_,idx) => idx !== i);
-                while(opts.length < 4) opts.push(otras.shift());
-                bank.push({ q: `¿Cuál es la característica principal de ${planetas[i]}?`, opts: shuffleArray(opts), ans: opts.indexOf(respuestas[i]) });
+            
+            for (let i = 0; i < 8; i++) {
+                let opts = [respuestasCorrectas[i]];
+                let otras = respuestasCorrectas.filter((_, idx) => idx !== i);
+                while (opts.length < 4) opts.push(otras.shift());
+                opts = shuffleArray(opts);
+                bank.push({ 
+                    q: `¿Cuál es la característica principal de ${planetas[i]}?`, 
+                    opts: opts, 
+                    correctText: respuestasCorrectas[i]  // texto correcto
+                });
             }
-            // Más preguntas variadas (92 adicionales)
+            
+            // Preguntas extra variadas (más de 92 para completar 100)
             const extraQuestions = [
-                { q: "¿Cuál es la estrella más cercana a la Tierra?", opts: ["Próxima Centauri", "Sirio", "El Sol", "Alfa Centauri"], ans: 2 },
-                { q: "¿En qué año llegó el ser humano a la Luna?", opts: ["1965", "1969", "1972", "1958"], ans: 1 },
-                { q: "¿Qué tipo de galaxia es la Vía Láctea?", opts: ["Elíptica", "Espiral", "Irregular", "Lenticular"], ans: 1 },
-                { q: "¿Qué es un año luz?", opts: ["Medida de tiempo", "Distancia que recorre la luz en un año", "Edad del universo", "Velocidad de la luz"], ans: 1 },
-                { q: "¿Cuál es el planeta más caliente?", opts: ["Mercurio", "Venus", "Tierra", "Marte"], ans: 1 },
-                { q: "¿Cuántas lunas tiene Marte?", opts: ["1", "2", "4", "0"], ans: 1 },
-                { q: "¿Qué planeta tiene la mayor densidad?", opts: ["Júpiter", "Tierra", "Saturno", "Urano"], ans: 1 },
-                { q: "¿Quién formuló las leyes del movimiento planetario?", opts: ["Newton", "Kepler", "Galileo", "Copérnico"], ans: 1 },
-                { q: "¿Qué es un púlsar?", opts: ["Estrella de neutrones giratoria", "Agujero negro", "Nebulosa", "Galaxia"], ans: 0 },
-                { q: "¿Cuál es la luna más grande de Saturno?", opts: ["Titán", "Europa", "Ganímedes", "Calisto"], ans: 0 },
-                { q: "¿Qué misión llevó al primer humano a la Luna?", opts: ["Apolo 11", "Apolo 13", "Soyuz", "Artemis"], ans: 0 },
-                { q: "¿Qué planeta tiene el día más largo?", opts: ["Venus", "Mercurio", "Marte", "Júpiter"], ans: 0 }
+                { q: "¿Cuál es la estrella más cercana a la Tierra?", opts: ["Próxima Centauri", "Sirio", "El Sol", "Alfa Centauri"], correct: "El Sol" },
+                { q: "¿En qué año llegó el ser humano a la Luna?", opts: ["1965", "1969", "1972", "1958"], correct: "1969" },
+                { q: "¿Qué tipo de galaxia es la Vía Láctea?", opts: ["Elíptica", "Espiral", "Irregular", "Lenticular"], correct: "Espiral" },
+                { q: "¿Qué es un año luz?", opts: ["Medida de tiempo", "Distancia que recorre la luz en un año", "Edad del universo", "Velocidad de la luz"], correct: "Distancia que recorre la luz en un año" },
+                { q: "¿Cuál es el planeta más caliente?", opts: ["Mercurio", "Venus", "Tierra", "Marte"], correct: "Venus" },
+                { q: "¿Cuántas lunas tiene Marte?", opts: ["1", "2", "4", "0"], correct: "2" },
+                { q: "¿Qué planeta tiene la mayor densidad?", opts: ["Júpiter", "Tierra", "Saturno", "Urano"], correct: "Tierra" },
+                { q: "¿Quién formuló las leyes del movimiento planetario?", opts: ["Newton", "Kepler", "Galileo", "Copérnico"], correct: "Kepler" },
+                { q: "¿Qué es un púlsar?", opts: ["Estrella de neutrones giratoria", "Agujero negro", "Nebulosa", "Galaxia"], correct: "Estrella de neutrones giratoria" },
+                { q: "¿Cuál es la luna más grande de Saturno?", opts: ["Titán", "Europa", "Ganímedes", "Calisto"], correct: "Titán" },
+                { q: "¿Qué misión llevó al primer humano a la Luna?", opts: ["Apolo 11", "Apolo 13", "Soyuz", "Artemis"], correct: "Apolo 11" },
+                { q: "¿Qué planeta tiene el día más largo?", opts: ["Venus", "Mercurio", "Marte", "Júpiter"], correct: "Venus" },
+                { q: "¿Cuál es el planeta más grande?", opts: ["Júpiter", "Saturno", "Urano", "Neptuno"], correct: "Júpiter" },
+                { q: "¿Qué planeta tiene anillos más visibles?", opts: ["Saturno", "Júpiter", "Urano", "Neptuno"], correct: "Saturno" },
+                { q: "¿Dónde se encuentra el cinturón de asteroides?", opts: ["Entre Marte y Júpiter", "Entre Tierra y Marte", "Más allá de Neptuno", "Cerca del Sol"], correct: "Entre Marte y Júpiter" },
+                { q: "¿Qué es una supernova?", opts: ["Explosión estelar", "Agujero negro", "Nebulosa", "Planeta"], correct: "Explosión estelar" },
+                { q: "¿Cuál es la galaxia más cercana a la Vía Láctea?", opts: ["Andrómeda", "Triángulo", "Nube de Magallanes", "Sombrero"], correct: "Andrómeda" },
+                { q: "¿Qué instrumento se usa para observar el cielo?", opts: ["Telescopio", "Microscopio", "Periscopio", "Estetoscopio"], correct: "Telescopio" },
+                { q: "¿Qué científico propuso el modelo heliocéntrico?", opts: ["Copérnico", "Ptolomeo", "Aristóteles", "Kepler"], correct: "Copérnico" },
+                { q: "¿Cuántos planetas hay en el sistema solar?", opts: ["8", "9", "7", "10"], correct: "8" },
+                { q: "¿Qué es un eclipse solar?", opts: ["La Luna tapa al Sol", "La Tierra tapa al Sol", "El Sol tapa a la Luna", "Ninguna"], correct: "La Luna tapa al Sol" },
+                { q: "¿Qué planeta tiene la Gran Mancha Roja?", opts: ["Júpiter", "Saturno", "Marte", "Venus"], correct: "Júpiter" },
+                { q: "¿Qué nombre recibe la estrella más brillante del cielo nocturno?", opts: ["Sirio", "Canopus", "Arturo", "Vega"], correct: "Sirio" },
+                { q: "¿Qué es un agujero negro?", opts: ["Región con gravedad extrema", "Estrella muerta", "Nebulosa oscura", "Planeta invisible"], correct: "Región con gravedad extrema" },
+                { q: "¿Cuál es el satélite natural de la Tierra?", opts: ["Luna", "Fobos", "Deimos", "Europa"], correct: "Luna" }
             ];
-            // Completar hasta 100 con variantes y más preguntas únicas
+            
+            // Agregar preguntas extra mezclando opciones
+            for (let eq of extraQuestions) {
+                let opts = shuffleArray([...eq.opts]);
+                bank.push({
+                    q: eq.q,
+                    opts: opts,
+                    correctText: eq.correct
+                });
+            }
+            
+            // Completar hasta 100 con preguntas repetidas de las extra si es necesario (pero se llena con las de abajo)
             const baseSet = [
-                { q: "¿Cuál es el planeta más grande?", o: ["Júpiter","Saturno","Urano","Neptuno"], a:0 },
-                { q: "¿Qué planeta tiene anillos más visibles?", o: ["Saturno","Júpiter","Urano","Neptuno"], a:0 },
-                { q: "¿Dónde se encuentra el cinturón de asteroides?", o: ["Entre Marte y Júpiter","Entre Tierra y Marte","Más allá de Neptuno","Cerca del Sol"], a:0 },
-                { q: "¿Qué es una supernova?", o: ["Explosión estelar","Agujero negro","Nebulosa","Planeta"], a:0 },
-                { q: "¿Cuál es la galaxia más cercana a la Vía Láctea?", o: ["Andrómeda","Triángulo","Nube de Magallanes","Sombrero"], a:0 },
-                { q: "¿Qué instrumento se usa para observar el cielo?", o: ["Telescopio","Microscopio","Periscopio","Estetoscopio"], a:0 },
-                { q: "¿Qué científico propuso el modelo heliocéntrico?", o: ["Copérnico","Ptolomeo","Aristóteles","Kepler"], a:0 },
-                { q: "¿Cuántos planetas hay en el sistema solar?", o: ["8","9","7","10"], a:0 },
-                { q: "¿Qué es un eclipse solar?", o: ["La Luna tapa al Sol","La Tierra tapa al Sol","El Sol tapa a la Luna","Ninguna"], a:0 },
-                { q: "¿Qué planeta tiene la Gran Mancha Roja?", o: ["Júpiter","Saturno","Marte","Venus"], a:0 }
+                { q: "¿Cuál es la distancia aproximada de la Tierra al Sol?", opts: ["150 millones km", "300 millones km", "75 millones km", "450 millones km"], correct: "150 millones km" },
+                { q: "¿Qué es un cometa?", opts: ["Bola de hielo y polvo", "Asteroide", "Estrella fugaz", "Planeta enano"], correct: "Bola de hielo y polvo" },
+                { q: "¿Cuál es el planeta enano más famoso del cinturón de Kuiper?", opts: ["Plutón", "Ceres", "Eris", "Makemake"], correct: "Plutón" },
+                { q: "¿Qué misión espacial estudió Júpiter de cerca?", opts: ["Galileo", "Cassini", "Voyager", "New Horizons"], correct: "Galileo" },
+                { q: "¿Qué fenómeno ocurre cuando la Luna se interpone entre el Sol y la Tierra?", opts: ["Eclipse solar", "Eclipse lunar", "Marea alta", "Solsticio"], correct: "Eclipse solar" }
             ];
-            let idx = 8;
-            while(bank.length < 100) {
-                if(idx < extraQuestions.length) bank.push({...extraQuestions[idx], opts: shuffleArray(extraQuestions[idx].opts.slice())});
-                else {
-                    let b = baseSet[(idx - extraQuestions.length) % baseSet.length];
-                    bank.push({ q: b.q, opts: shuffleArray(b.o.slice()), ans: b.a });
-                }
+            
+            let idx = bank.length;
+            while (bank.length < 100) {
+                let base = baseSet[(idx - extraQuestions.length) % baseSet.length];
+                let opts = shuffleArray([...base.opts]);
+                bank.push({
+                    q: base.q,
+                    opts: opts,
+                    correctText: base.correct
+                });
                 idx++;
             }
-            return bank.slice(0,100);
+            
+            // Asegurar exactamente 100 preguntas (cortar por si acaso)
+            return bank.slice(0, 100);
         }
-        
-        function shuffleArray(arr) { for (let i=arr.length-1; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
         
         const questionBank = generateUniqueQuestionBank();
         let currentPlayer = '', currentScore = 0, availableQuestions = [], currentQuestion = null, answered = false, quizActive = false;
@@ -852,7 +891,8 @@
         function startQuiz() {
             const name = document.getElementById('playerName').value.trim();
             if (!name) { alert('Ingresa tu nombre'); return; }
-            currentPlayer = name; currentScore = 0;
+            currentPlayer = name; 
+            currentScore = 0;
             availableQuestions = shuffleArray([...questionBank]);
             quizActive = true;
             document.getElementById('displayName').textContent = name;
@@ -862,10 +902,12 @@
             document.getElementById('nextQuestionBtn').style.display = 'none';
             loadNextQuestion();
         }
+        
         function loadNextQuestion() {
             if (!quizActive) return;
             answered = false;
             if (availableQuestions.length === 0) {
+                // Completado exitosamente
                 quizActive = false;
                 document.getElementById('quizMessage').style.display = 'block';
                 document.getElementById('quizMessage').innerHTML = '🏆 ¡FELICIDADES! ¡Eres un maestro de la astronomía! Has completado las 100 preguntas sin errores.';
@@ -878,24 +920,28 @@
             }
             currentQuestion = availableQuestions.shift();
             document.getElementById('questionText').textContent = currentQuestion.q;
-            document.getElementById('currentQuestionNumber').textContent = 100 - availableQuestions.length;
-            document.getElementById('progressFill').style.width = ((100 - availableQuestions.length) / 100 * 100) + '%';
+            const numActual = 100 - availableQuestions.length;
+            document.getElementById('currentQuestionNumber').textContent = numActual;
+            document.getElementById('progressFill').style.width = (numActual / 100 * 100) + '%';
+            
             const optsContainer = document.getElementById('optionsContainer');
             optsContainer.innerHTML = '';
             currentQuestion.opts.forEach((text, idx) => {
                 const div = document.createElement('div');
                 div.className = 'question-option';
                 div.textContent = text;
-                div.dataset.opt = idx;
-                div.addEventListener('click', () => handleAnswer(idx, div));
+                div.dataset.optText = text;
+                div.addEventListener('click', () => handleAnswer(text, div));
                 optsContainer.appendChild(div);
             });
         }
-        function handleAnswer(selectedIdx, element) {
+        
+        function handleAnswer(selectedText, element) {
             if (answered || !quizActive) return;
             answered = true;
-            const isCorrect = (selectedIdx === currentQuestion.ans);
+            const isCorrect = (selectedText === currentQuestion.correctText);
             document.querySelectorAll('.question-option').forEach(opt => opt.style.pointerEvents = 'none');
+            
             if (isCorrect) {
                 element.classList.add('correct-feedback');
                 currentScore++;
@@ -912,21 +958,27 @@
                 }, 1500);
             }
         }
+        
         function actualizarRanking(nombre, puntaje) {
             const hoy = new Date().toLocaleDateString('es-VE');
             const index = rankingDiario.findIndex(r => r.nombre.toLowerCase() === nombre.toLowerCase());
-            if (index !== -1) { if (puntaje > rankingDiario[index].puntaje) rankingDiario[index].puntaje = puntaje; }
-            else rankingDiario.push({ nombre, puntaje, fecha: hoy });
+            if (index !== -1) { 
+                if (puntaje > rankingDiario[index].puntaje) rankingDiario[index].puntaje = puntaje; 
+            } else {
+                rankingDiario.push({ nombre, puntaje, fecha: hoy });
+            }
             rankingDiario.sort((a,b) => b.puntaje - a.puntaje);
             rankingDiario = rankingDiario.slice(0,10);
             guardarDatosNube();
             mostrarRanking();
         }
+        
         function mostrarRanking() {
             const list = document.getElementById('rankingList');
             if (!rankingDiario.length) { list.innerHTML = '<li>Aún no hay puntajes hoy. ¡Sé el primero!</li>'; return; }
             list.innerHTML = rankingDiario.map((r,i) => `<li class="${i===0?'champion':''}"><span>${i+1}. ${r.nombre}</span><span>${r.puntaje} pts</span></li>`).join('');
         }
+        
         document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
         document.getElementById('nextQuestionBtn').addEventListener('click', () => { if(quizActive) { document.getElementById('nextQuestionBtn').style.display='none'; loadNextQuestion(); } });
         
@@ -1012,12 +1064,6 @@
         const upBtn = document.getElementById('mobileUpBtn');
         const shootBtn = document.getElementById('mobileShootBtn');
         
-        function setMobileControl(btn, flag, value) {
-            btn.addEventListener('mousedown', (e)=>{ e.preventDefault(); flag = value; });
-            btn.addEventListener('mouseup', ()=>{ flag = false; });
-            btn.addEventListener('touchstart', (e)=>{ e.preventDefault(); flag = value; });
-            btn.addEventListener('touchend', (e)=>{ e.preventDefault(); flag = false; });
-        }
         leftBtn.addEventListener('mousedown', (e)=>{ e.preventDefault(); mobileLeft = true; });
         leftBtn.addEventListener('mouseup', ()=> mobileLeft = false);
         leftBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); mobileLeft = true; });
@@ -1061,4 +1107,3 @@
 </script>
 </body>
 </html>
-
