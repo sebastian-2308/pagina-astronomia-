@@ -76,19 +76,16 @@
         .game-container { position: relative; display: flex; flex-direction: column; align-items: center; }
         #gameCanvas { background: #0a1a2a; border-radius: 20px; border: 3px solid var(--border-color); width: 100%; max-width: 800px; height: auto; aspect-ratio: 1/1; display: block; margin: 0 auto; touch-action: none; }
         .game-controls { margin: 1rem 0; text-align: center; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; align-items: center; }
-        /* Controles móviles con flechas */
         .mobile-controls { display: none; width: 100%; max-width: 500px; margin: 0.5rem auto; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
         .arrow-controls { display: flex; gap: 0.8rem; justify-content: center; }
         .mobile-arrow { width: 70px; height: 70px; font-size: 2.2rem; border-radius: 30px; background: var(--card-bg); border: 3px solid var(--border-color); color: var(--text-color); box-shadow: 4px 4px 0 var(--card-shadow); touch-action: manipulation; user-select: none; }
         .shoot-btn { width: auto; padding: 0 2rem; height: 70px; font-size: 1.5rem; background: #e94560; color: white; border: 3px solid #fff; box-shadow: 4px 4px 0 #800; touch-action: manipulation; }
-        .touch-hint { text-align: center; color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 0.5rem; }
         .fullscreen-btn { background: var(--card-bg); border: 2px solid var(--border-color); color: var(--text-color); padding: 0.5rem 1rem; border-radius: 40px; margin-left: 0.5rem; cursor: pointer; }
         .start-btn { background: #4caf50; color: white; font-size: 1.2rem; padding: 0.8rem 2rem; }
         .efemerides-box { background: var(--result-bg); border-radius: 20px; padding: 1rem; margin-top: 1rem; border: 1px solid var(--border-color); }
         @media (max-width: 700px) {
             .grid-2 { grid-template-columns: 1fr; } .tab-btn { padding: 0.5rem 0.8rem; font-size: 0.8rem; } .header-controls { top: 10px; right: 10px; }
             .mobile-controls { display: flex; }
-            .touch-controls { display: none; } /* ocultamos el joystick antiguo */
             .game-container { user-select: none; -webkit-tap-highlight-color: transparent; }
         }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; }
@@ -98,8 +95,6 @@
         .legend-color { width: 15px; height: 15px; border-radius: 50%; }
         .progress-bar { width: 100%; height: 10px; background: #ddd; border-radius: 10px; margin: 1rem 0; }
         .progress-fill { height: 100%; background: var(--border-color); border-radius: 10px; width: 0%; transition: width 0.3s; }
-        /* ocultar antiguo touch-controls en móvil */
-        .touch-controls { display: none; }
     </style>
 </head>
 <body>
@@ -113,7 +108,7 @@
     </div>
 </div>
 
-<!-- LOGIN MODAL -->
+<!-- MODAL DE LOGIN PARA ADMIN -->
 <div id="loginModal" style="display:none;" class="modal">
     <div class="modal-content">
         <h3>🔐 Acceso Administrador</h3>
@@ -127,7 +122,7 @@
     </div>
 </div>
 
-<!-- MODAL EDICIÓN TEXTO -->
+<!-- MODAL PARA EDITAR CONTENIDO (SOLO ADMIN) -->
 <div id="editModal" style="display:none;" class="modal">
     <div class="modal-content">
         <h3 id="editModalTitle">Editar contenido</h3>
@@ -157,7 +152,7 @@
     <button class="tab-btn" data-tab="tab10">📞 Soporte</button>
 </div>
 
-<!-- ==================== INICIO (tab1) ==================== -->
+<!-- ==================== PESTAÑA INICIO ==================== -->
 <div id="tab1" class="tab-content active">
     <div class="card" data-editable="welcome">
         <h2>🚀 ¡Bienvenidos al Semillero!</h2>
@@ -188,10 +183,11 @@
     </div>
 </div>
 
-<!-- ==================== SIMULADOR GRAVEDAD (tab2) ==================== -->
+<!-- ==================== SIMULADOR DE GRAVEDAD TIERRA-LUNA ==================== -->
 <div id="tab2" class="tab-content">
     <div class="card">
         <h2>🪐 Simulador: Gravedad Tierra-Luna</h2>
+        <p><strong>¿Qué hace?</strong> Muestra la órbita de la Luna alrededor de la Tierra. Puedes cambiar la distancia y ver cómo varía la velocidad orbital y el periodo.</p>
         <label>Distancia (miles de km): <input type="range" id="distanciaLuna" min="50" max="400" value="384" step="1"></label>
         <span id="distanciaValor">384,000 km</span>
         <canvas id="simuladorCanvas" width="600" height="300" class="sim-canvas"></canvas>
@@ -199,10 +195,11 @@
     </div>
 </div>
 
-<!-- ==================== CALCULADORAS (tab3) ==================== -->
+<!-- ==================== CALCULADORAS ASTRONÓMICAS ==================== -->
 <div id="tab3" class="tab-content">
     <div class="card">
         <h2>🔭 Calculadora de telescopio</h2>
+        <p><strong>¿Para qué sirve?</strong> Calcula el aumento, la magnitud límite y el campo real de un telescopio según su diámetro, distancia focal y el ocular usado.</p>
         <label>Diámetro (mm): <input type="number" id="diametroCalc" value="150"></label>
         <label>Distancia focal (mm): <input type="number" id="focalCalc" value="1200"></label>
         <label>Ocular (mm): <input type="number" id="ocularCalc" value="25"></label>
@@ -211,6 +208,7 @@
     </div>
     <div class="card">
         <h2>🔄 Conversor de unidades astronómicas</h2>
+        <p><strong>¿Para qué sirve?</strong> Convierte entre Unidades Astronómicas (UA), kilómetros, pársecs (pc) y años luz (ly).</p>
         <div class="grid-2">
             <div><label>UA:</label><input type="number" id="ua" value="1"></div>
             <div><label>Kilómetros (km):</label><input type="number" id="km" value="149597870.7"></div>
@@ -222,10 +220,11 @@
     </div>
 </div>
 
-<!-- ==================== VISOR DE PLANETAS (tab4) ==================== -->
+<!-- ==================== VISOR DE PLANETAS EN MOVIMIENTO ==================== -->
 <div id="tab4" class="tab-content">
     <div class="card">
         <h2>🌌 Visor de planetas</h2>
+        <p><strong>¿Qué hace?</strong> Simula el movimiento orbital de los planetas alrededor del Sol a diferentes velocidades relativas.</p>
         <canvas id="planetsCanvas" width="500" height="500" class="planet-canvas"></canvas>
         <div class="legend">
             <div class="legend-item"><span class="legend-color" style="background:#b08d6e;"></span> Mercurio</div>
@@ -240,7 +239,7 @@
     </div>
 </div>
 
-<!-- ==================== EL COMETA (tab5) ==================== -->
+<!-- ==================== EL COMETA (NOTICIAS + APOD + EFEMÉRIDES) ==================== -->
 <div id="tab5" class="tab-content">
     <div class="card">
         <h2>📰 El Cometa - Noticias</h2>
@@ -266,7 +265,7 @@
     </div>
 </div>
 
-<!-- ==================== RECURSOS VISUALES (tab6) ==================== -->
+<!-- ==================== RECURSOS VISUALES (GALERÍA DEL SISTEMA SOLAR) ==================== -->
 <div id="tab6" class="tab-content">
     <div class="card">
         <h2>👩‍🚀 Galería del Sistema Solar</h2>
@@ -274,10 +273,11 @@
     </div>
 </div>
 
-<!-- ==================== IA (tab7) ==================== -->
+<!-- ==================== ASISTENTE IA ASTRONÓMICA ==================== -->
 <div id="tab7" class="tab-content">
     <div class="card">
         <h2>🤖 Asistente Astronómica</h2>
+        <p><strong>¿Qué hace?</strong> Responde preguntas sobre astronomía usando inteligencia artificial (API de Pollinations).</p>
         <div class="chat-box" id="chatBox">
             <div class="chat-msg bot-msg">🔭 ¡Hola! Pregúntame sobre el espacio.</div>
         </div>
@@ -286,10 +286,11 @@
     </div>
 </div>
 
-<!-- ==================== CUESTIONARIO (tab8) ==================== -->
+<!-- ==================== CUESTIONARIO DE 100 PREGUNTAS ==================== -->
 <div id="tab8" class="tab-content">
     <div class="card">
         <h2>📡 Desafío de 100 Preguntas</h2>
+        <p><strong>¿Cómo funciona?</strong> Responde las 100 preguntas de astronomía sin fallar. Cada acierto suma un punto. Si fallas, se guarda tu puntuación en el ranking y debes volver a empezar.</p>
         <div id="loginSection">
             <label>👩🏻‍🚀 Ingresa tu nombre para comenzar:</label>
             <input type="text" id="playerName" placeholder="Tu nombre">
@@ -311,19 +312,18 @@
             <button id="nextQuestionBtn" style="display:none; margin-top:1rem;">Siguiente →</button>
         </div>
         <div style="margin-top:2rem;">
-            <h3>🏆 Ranking del Día (100 preguntas completadas)</h3>
+            <h3>🏆 Ranking del Día (mejores puntuaciones)</h3>
             <ul id="rankingList" class="ranking-list"><li>Cargando...</li></ul>
         </div>
     </div>
 </div>
 
-<!-- ==================== JUEGO DE ASTEROIDES (tab9) ==================== -->
+<!-- ==================== JUEGO DE ASTEROIDES ==================== -->
 <div id="tab9" class="tab-content">
     <div class="card">
         <h2>🎮 Asteroides: Edición Definitiva</h2>
         <div class="game-container">
             <canvas id="gameCanvas" width="800" height="800"></canvas>
-            <!-- Controles móviles nuevos: flechas + disparo -->
             <div class="mobile-controls">
                 <div class="arrow-controls">
                     <button class="ctrl-btn mobile-arrow" id="mobileLeftBtn">◀</button>
@@ -331,14 +331,6 @@
                     <button class="ctrl-btn mobile-arrow" id="mobileRightBtn">▶</button>
                 </div>
                 <button class="ctrl-btn shoot-btn" id="mobileShootBtn">🔫 Disparar</button>
-            </div>
-            <!-- Antiguo touch-controls se oculta en móvil -->
-            <div class="touch-controls">
-                <div class="touch-area">
-                    <div class="joystick-zone" id="joystickZone"></div>
-                    <div class="shoot-zone" id="shootZone"></div>
-                </div>
-                <div class="touch-hint">← Desliza para girar/acelerar | Toca para disparar →</div>
             </div>
             <div class="game-controls">
                 <button id="startGameBtn" class="start-btn">▶️ Iniciar Juego</button>
@@ -354,7 +346,7 @@
     </div>
 </div>
 
-<!-- ==================== SOPORTE (tab10) ==================== -->
+<!-- ==================== SOPORTE ==================== -->
 <div id="tab10" class="tab-content">
     <div class="card">
         <h2>📞 Soporte</h2>
@@ -368,26 +360,26 @@
     (function(){
         'use strict';
         
-        // ==================== CONFIGURACIÓN JSONBIN ====================
+        // ==================== CONFIGURACIÓN Y VARIABLES GLOBALES ====================
+        // API de JSONBin para persistencia en la nube
         const CONFIG = {
             JSONBIN_API_KEY: '$2a$10$M/Hy7ce4UuOIFvnT1kpq4.EOm9jr6PA1n7Jw7sgOnnnoQBKtgp0LK',
             JSONBIN_BIN_ID: '69e18e8336566621a8c08c56'
         };
         
-        // ==================== ESTADO GLOBAL ====================
-        let isAdmin = false;
-        const ADMIN_CREDS = [
+        let isAdmin = false;               // Modo administrador
+        const ADMIN_CREDS = [              // Credenciales de administrador
             { user: 'jorge', pass: 'astronomiacaracas' },
             { user: 'sebastian', pass: 'astronomiacaracas' }
         ];
         
         let siteContent = JSON.parse(localStorage.getItem('siteContent')) || {};
-        let customNews = [];
-        let rankingDiario = [];       // para el cuestionario
-        let gameRanking = [];         // para el juego
+        let customNews = [];               // Noticias personalizadas
+        let rankingDiario = [];            // Ranking del cuestionario (mejores puntuaciones)
+        let gameRanking = [];              // Ranking del juego de asteroides
         let visitas = { total: 0, hoy: 0, fechaHoy: '' };
         
-        // ==================== GALERÍA FIJA DEL SISTEMA SOLAR ====================
+        // ==================== GALERÍA DEL SISTEMA SOLAR (datos fijos) ====================
         const sistemaSolar = [
             { nombre: 'Sol', desc: 'Estrella tipo G, centro de nuestro sistema.', img: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg' },
             { nombre: 'Mercurio', desc: 'El planeta más cercano al Sol.', img: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Mercury_in_true_color.jpg' },
@@ -436,7 +428,7 @@
         }
         setInterval(rotarEfemerides, 10000);
         
-        // ==================== SINCRONIZACIÓN CON JSONBIN ====================
+        // ==================== SINCRONIZACIÓN CON JSONBIN (NUBE) ====================
         async function cargarDatosNube() {
             try {
                 const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}/latest`, {
@@ -469,6 +461,7 @@
                 visitas.hoy = 0;
                 visitas.fechaHoy = hoy;
             }
+            // Si el ranking no es del día de hoy, lo reiniciamos
             if (!rankingDiario.length || (rankingDiario[0]?.fecha && rankingDiario[0].fecha !== hoy)) {
                 rankingDiario = [];
             }
@@ -524,7 +517,7 @@
             svg.innerHTML = isDark ? '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" fill="currentColor"/>' : '<path d="M12 3v1m0 16v1m9-9h-1m-16 0H3m15.32-6.32l-.71-.71M5.38 18.38l-.71-.71M18.32 18.32l-.71-.71M5.38 5.38l-.71-.71M12 7a5 5 0 100 10 5 5 0 000-10z" stroke="currentColor" stroke-width="2" fill="none"/>';
         });
         
-        // ==================== PESTAÑAS ====================
+        // ==================== NAVEGACIÓN POR PESTAÑAS ====================
         const tabs = document.querySelectorAll('.tab-btn');
         const contents = document.querySelectorAll('.tab-content');
         tabs.forEach(btn => {
@@ -537,7 +530,7 @@
             });
         });
         
-        // ==================== ADMIN ====================
+        // ==================== PANEL DE ADMINISTRACIÓN ====================
         function checkAdminAndShowUI() {
             document.querySelectorAll('.edit-btn').forEach(el => el.remove());
             if (isAdmin) {
@@ -603,7 +596,7 @@
             }
         });
         
-        // ==================== NOTICIAS ====================
+        // ==================== GESTIÓN DE NOTICIAS ====================
         function cargarNoticias() {
             const container = document.getElementById('customNewsContainer');
             if (!customNews.length) {
@@ -667,7 +660,7 @@
             document.getElementById('editingNewsId').value = '';
         });
         
-        // ==================== APOD ====================
+        // ==================== APOD (NASA) ====================
         async function cargarAPOD() {
             const c = document.getElementById('apodContainer');
             try {
@@ -677,7 +670,7 @@
             } catch(e) { c.innerHTML = '<div class="result">No se pudo cargar</div>'; }
         }
         
-        // ==================== SIMULADOR ====================
+        // ==================== SIMULADOR DE GRAVEDAD ====================
         const canvasSim = document.getElementById('simuladorCanvas');
         const ctx = canvasSim.getContext('2d');
         let dist = 384000, ang = 0, vel = 0.01;
@@ -736,7 +729,7 @@
         document.getElementById('convertirAstro').addEventListener('click', convertir);
         convertir();
         
-        // ==================== PLANETAS ====================
+        // ==================== VISOR DE PLANETAS ====================
         const pCanvas = document.getElementById('planetsCanvas');
         const pCtx = pCanvas.getContext('2d');
         const planets = [
@@ -763,7 +756,7 @@
         }
         pCanvas.width=500; pCanvas.height=500; drawPlanets();
         
-        // ==================== IA ====================
+        // ==================== IA ASTRONÓMICA ====================
         const chatBox = document.getElementById('chatBox');
         function addMsg(t, user) {
             const d = document.createElement('div');
@@ -782,8 +775,7 @@
             document.getElementById('userQuestion').value = '';
         });
         
-        // ==================== CUESTIONARIO (100 PREGUNTAS ÚNICAS) - CORREGIDO ====================
-        // Función para mezclar array (Fisher-Yates)
+        // ==================== CUESTIONARIO DE 100 PREGUNTAS (CON RANKING AL FALLAR) ====================
         function shuffleArray(arr) { 
             for (let i = arr.length - 1; i > 0; i--) { 
                 const j = Math.floor(Math.random() * (i + 1)); 
@@ -792,11 +784,9 @@
             return arr; 
         }
         
-        // Generador de 100 preguntas únicas con respuesta correcta guardada como texto (no índice)
+        // Generar banco de 100 preguntas únicas
         function generateUniqueQuestionBank() {
             const bank = [];
-            
-            // Preguntas de planetas (8)
             const planetas = ["Mercurio", "Venus", "Tierra", "Marte", "Júpiter", "Saturno", "Urano", "Neptuno"];
             const respuestasCorrectas = [
                 "Es el planeta más cercano al Sol y el más pequeño.",
@@ -808,20 +798,13 @@
                 "Gigante de hielo que rota de lado, con un eje de inclinación extremo.",
                 "El planeta más ventoso, con vientos supersónicos."
             ];
-            
             for (let i = 0; i < 8; i++) {
                 let opts = [respuestasCorrectas[i]];
                 let otras = respuestasCorrectas.filter((_, idx) => idx !== i);
                 while (opts.length < 4) opts.push(otras.shift());
                 opts = shuffleArray(opts);
-                bank.push({ 
-                    q: `¿Cuál es la característica principal de ${planetas[i]}?`, 
-                    opts: opts, 
-                    correctText: respuestasCorrectas[i]  // texto correcto
-                });
+                bank.push({ q: `¿Cuál es la característica principal de ${planetas[i]}?`, opts: opts, correctText: respuestasCorrectas[i] });
             }
-            
-            // Preguntas extra variadas (más de 92 para completar 100)
             const extraQuestions = [
                 { q: "¿Cuál es la estrella más cercana a la Tierra?", opts: ["Próxima Centauri", "Sirio", "El Sol", "Alfa Centauri"], correct: "El Sol" },
                 { q: "¿En qué año llegó el ser humano a la Luna?", opts: ["1965", "1969", "1972", "1958"], correct: "1969" },
@@ -849,18 +832,10 @@
                 { q: "¿Qué es un agujero negro?", opts: ["Región con gravedad extrema", "Estrella muerta", "Nebulosa oscura", "Planeta invisible"], correct: "Región con gravedad extrema" },
                 { q: "¿Cuál es el satélite natural de la Tierra?", opts: ["Luna", "Fobos", "Deimos", "Europa"], correct: "Luna" }
             ];
-            
-            // Agregar preguntas extra mezclando opciones
             for (let eq of extraQuestions) {
                 let opts = shuffleArray([...eq.opts]);
-                bank.push({
-                    q: eq.q,
-                    opts: opts,
-                    correctText: eq.correct
-                });
+                bank.push({ q: eq.q, opts: opts, correctText: eq.correct });
             }
-            
-            // Completar hasta 100 con preguntas repetidas de las extra si es necesario (pero se llena con las de abajo)
             const baseSet = [
                 { q: "¿Cuál es la distancia aproximada de la Tierra al Sol?", opts: ["150 millones km", "300 millones km", "75 millones km", "450 millones km"], correct: "150 millones km" },
                 { q: "¿Qué es un cometa?", opts: ["Bola de hielo y polvo", "Asteroide", "Estrella fugaz", "Planeta enano"], correct: "Bola de hielo y polvo" },
@@ -868,20 +843,13 @@
                 { q: "¿Qué misión espacial estudió Júpiter de cerca?", opts: ["Galileo", "Cassini", "Voyager", "New Horizons"], correct: "Galileo" },
                 { q: "¿Qué fenómeno ocurre cuando la Luna se interpone entre el Sol y la Tierra?", opts: ["Eclipse solar", "Eclipse lunar", "Marea alta", "Solsticio"], correct: "Eclipse solar" }
             ];
-            
             let idx = bank.length;
             while (bank.length < 100) {
                 let base = baseSet[(idx - extraQuestions.length) % baseSet.length];
                 let opts = shuffleArray([...base.opts]);
-                bank.push({
-                    q: base.q,
-                    opts: opts,
-                    correctText: base.correct
-                });
+                bank.push({ q: base.q, opts: opts, correctText: base.correct });
                 idx++;
             }
-            
-            // Asegurar exactamente 100 preguntas (cortar por si acaso)
             return bank.slice(0, 100);
         }
         
@@ -923,7 +891,6 @@
             const numActual = 100 - availableQuestions.length;
             document.getElementById('currentQuestionNumber').textContent = numActual;
             document.getElementById('progressFill').style.width = (numActual / 100 * 100) + '%';
-            
             const optsContainer = document.getElementById('optionsContainer');
             optsContainer.innerHTML = '';
             currentQuestion.opts.forEach((text, idx) => {
@@ -948,14 +915,16 @@
                 document.getElementById('nextQuestionBtn').style.display = 'block';
             } else {
                 element.classList.add('wrong-feedback');
+                // ✅ GUARDAR PUNTUACIÓN EN EL RANKING (como en el juego)
+                actualizarRanking(currentPlayer, currentScore);
                 document.getElementById('quizMessage').style.display = 'block';
-                document.getElementById('quizMessage').innerHTML = '❌ FALLIDO. Debes empezar de cero.';
+                document.getElementById('quizMessage').innerHTML = `❌ FALLIDO. Has acertado ${currentScore} preguntas. Tu puntuación se ha guardado en el ranking. Reinicia el desafío para intentar mejorar.`;
                 quizActive = false;
                 setTimeout(() => {
                     document.getElementById('quizSection').style.display = 'none';
                     document.getElementById('loginSection').style.display = 'block';
                     document.getElementById('playerName').value = '';
-                }, 1500);
+                }, 3000);
             }
         }
         
@@ -1001,8 +970,6 @@
         let ship = { x:400, y:400, vx:0, vy:0, angle:0, active:true };
         let bullets = [], enemies = [], asteroids = [];
         let gameScore = 0, gameRunning = false, gameLoopId = null, gameTime = 0;
-        
-        // Banderas para controles móviles
         let mobileLeft = false, mobileRight = false, mobileUp = false, mobileShoot = false;
         
         function resetGame() {
@@ -1021,7 +988,6 @@
         function drawAsteroids() { gCtx.strokeStyle='#aaa'; gCtx.lineWidth=2; asteroids.forEach(a=>{ gCtx.beginPath(); gCtx.arc(a.x,a.y,a.size,0,2*Math.PI); gCtx.stroke(); }); }
         function updateGame() {
             if(!gameRunning) return;
-            // Controles móviles
             if(ship.active) {
                 if(mobileLeft) ship.angle -= 0.1;
                 if(mobileRight) ship.angle += 0.1;
@@ -1039,7 +1005,6 @@
             bullets = bullets.filter(b=>{ b.x+=b.vx; b.y+=b.vy; return (b.x>=0 && b.x<=800 && b.y>=0 && b.y<=800); });
             enemies.forEach(e=>{ e.x+=e.vx; e.y+=e.vy; if(e.x<0) e.x=800; if(e.x>800) e.x=0; if(e.y<0) e.y=800; if(e.y>800) e.y=0; if(e.type==='shooter'){ if(ship.active) e.angle = Math.atan2(ship.y-e.y, ship.x-e.x); e.shootCooldown--; if(e.shootCooldown<=0 && ship.active){ bullets.push({ x:e.x+e.size*Math.cos(e.angle), y:e.y+e.size*Math.sin(e.angle), vx:2*Math.cos(e.angle), vy:2*Math.sin(e.angle), enemyBullet:true }); e.shootCooldown=60; } } });
             asteroids.forEach(a=>{ a.x+=a.vx; a.y+=a.vy; if(a.x<0) a.x=800; if(a.x>800) a.x=0; if(a.y<0) a.y=800; if(a.y>800) a.y=0; });
-            // colisiones...
             for(let i=bullets.length-1;i>=0;i--) { const b=bullets[i]; for(let j=asteroids.length-1;j>=0;j--) { const a=asteroids[j]; if(Math.hypot(b.x-a.x,b.y-a.y)<a.size) { bullets.splice(i,1); asteroids.splice(j,1); gameScore+=10; gameScoreSpan.textContent=gameScore; playSound('explosion'); break; } } }
             for(let i=bullets.length-1;i>=0;i--) { const b=bullets[i]; if(b.enemyBullet) continue; for(let j=enemies.length-1;j>=0;j--) { const e=enemies[j]; if(Math.hypot(b.x-e.x,b.y-e.y)<e.size+5) { bullets.splice(i,1); if(e.type==='splitter'){ playSound('explosion'); gameScore+=20; gameScoreSpan.textContent=gameScore; if(e.size>8){ for(let k=0;k<2;k++) enemies.push({ type:'splitter', x:e.x, y:e.y, vx:e.vx+(Math.random()-0.5)*2, vy:e.vy+(Math.random()-0.5)*2, size:e.size*0.7 }); } enemies.splice(j,1); } else { playSound('explosion'); gameScore+=30; gameScoreSpan.textContent=gameScore; enemies.splice(j,1); } break; } } }
             if(ship.active) { for(let a of asteroids) if(Math.hypot(ship.x-a.x,ship.y-a.y)<a.size+10) { ship.active=false; gameRunning=false; stopGame(); guardarPuntuacionJuego(); break; } for(let e of enemies) if(Math.hypot(ship.x-e.x,ship.y-e.y)<e.size+10) { ship.active=false; gameRunning=false; stopGame(); guardarPuntuacionJuego(); break; } for(let b of bullets) if(b.enemyBullet && Math.hypot(ship.x-b.x,ship.y-b.y)<12) { ship.active=false; gameRunning=false; stopGame(); guardarPuntuacionJuego(); break; } }
@@ -1058,12 +1023,11 @@
             list.innerHTML = gameRanking.map((r,i)=>`<li><span>${i+1}. ${r.nombre}</span><span>${r.puntaje} pts</span></li>`).join('');
         }
         
-        // Configurar botones móviles
+        // Controles móviles y teclado
         const leftBtn = document.getElementById('mobileLeftBtn');
         const rightBtn = document.getElementById('mobileRightBtn');
         const upBtn = document.getElementById('mobileUpBtn');
         const shootBtn = document.getElementById('mobileShootBtn');
-        
         leftBtn.addEventListener('mousedown', (e)=>{ e.preventDefault(); mobileLeft = true; });
         leftBtn.addEventListener('mouseup', ()=> mobileLeft = false);
         leftBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); mobileLeft = true; });
@@ -1079,7 +1043,6 @@
         shootBtn.addEventListener('mousedown', (e)=>{ e.preventDefault(); mobileShoot = true; });
         shootBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); mobileShoot = true; });
         
-        // Controles PC
         const keys = {};
         window.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return; if(e.key===' ') { e.preventDefault(); if(gameRunning && ship.active) { bullets.push({ x:ship.x+15*Math.cos(ship.angle), y:ship.y+15*Math.sin(ship.angle), vx:ship.vx+5*Math.cos(ship.angle), vy:ship.vy+5*Math.sin(ship.angle) }); playSound('shoot'); } } keys[e.key]=true; });
         window.addEventListener('keyup',e=>{ keys[e.key]=false; });
@@ -1088,7 +1051,7 @@
         document.getElementById('fullscreenBtn').addEventListener('click',()=>{ if(!document.fullscreenElement) document.querySelector('.game-container').requestFullscreen(); else document.exitFullscreen(); });
         startBtn.addEventListener('click',resetGame); restartBtn.addEventListener('click',resetGame);
         
-        // ==================== INICIALIZACIÓN ====================
+        // ==================== INICIALIZACIÓN GENERAL ====================
         (async function init() {
             await cargarDatosNube();
             for (let key in siteContent) { const card = document.querySelector(`[data-editable="${key}"]`); if(card && siteContent[key]) { const texts = card.querySelectorAll('.editable-text'); texts.forEach((el,i)=>{ if(siteContent[key][i]) el.innerHTML = siteContent[key][i]; }); } }
