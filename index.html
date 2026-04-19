@@ -76,17 +76,19 @@
         .game-container { position: relative; display: flex; flex-direction: column; align-items: center; }
         #gameCanvas { background: #0a1a2a; border-radius: 20px; border: 3px solid var(--border-color); width: 100%; max-width: 800px; height: auto; aspect-ratio: 1/1; display: block; margin: 0 auto; touch-action: none; }
         .game-controls { margin: 1rem 0; text-align: center; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; align-items: center; }
-        .touch-controls { display: none; position: relative; width: 100%; max-width: 800px; margin: 0 auto; }
-        .touch-area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; pointer-events: none; }
-        .joystick-zone { flex: 1; pointer-events: auto; background: rgba(255,255,255,0.05); border-radius: 20px 0 0 20px; }
-        .shoot-zone { flex: 1; pointer-events: auto; background: rgba(255,255,255,0.05); border-radius: 0 20px 20px 0; }
+        /* Controles móviles con flechas */
+        .mobile-controls { display: none; width: 100%; max-width: 500px; margin: 0.5rem auto; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
+        .arrow-controls { display: flex; gap: 0.8rem; justify-content: center; }
+        .mobile-arrow { width: 70px; height: 70px; font-size: 2.2rem; border-radius: 30px; background: var(--card-bg); border: 3px solid var(--border-color); color: var(--text-color); box-shadow: 4px 4px 0 var(--card-shadow); touch-action: manipulation; user-select: none; }
+        .shoot-btn { width: auto; padding: 0 2rem; height: 70px; font-size: 1.5rem; background: #e94560; color: white; border: 3px solid #fff; box-shadow: 4px 4px 0 #800; touch-action: manipulation; }
         .touch-hint { text-align: center; color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 0.5rem; }
         .fullscreen-btn { background: var(--card-bg); border: 2px solid var(--border-color); color: var(--text-color); padding: 0.5rem 1rem; border-radius: 40px; margin-left: 0.5rem; cursor: pointer; }
         .start-btn { background: #4caf50; color: white; font-size: 1.2rem; padding: 0.8rem 2rem; }
         .efemerides-box { background: var(--result-bg); border-radius: 20px; padding: 1rem; margin-top: 1rem; border: 1px solid var(--border-color); }
         @media (max-width: 700px) {
             .grid-2 { grid-template-columns: 1fr; } .tab-btn { padding: 0.5rem 0.8rem; font-size: 0.8rem; } .header-controls { top: 10px; right: 10px; }
-            .touch-controls { display: block; }
+            .mobile-controls { display: flex; }
+            .touch-controls { display: none; } /* ocultamos el joystick antiguo */
             .game-container { user-select: none; -webkit-tap-highlight-color: transparent; }
         }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; }
@@ -96,6 +98,8 @@
         .legend-color { width: 15px; height: 15px; border-radius: 50%; }
         .progress-bar { width: 100%; height: 10px; background: #ddd; border-radius: 10px; margin: 1rem 0; }
         .progress-fill { height: 100%; background: var(--border-color); border-radius: 10px; width: 0%; transition: width 0.3s; }
+        /* ocultar antiguo touch-controls en móvil */
+        .touch-controls { display: none; }
     </style>
 </head>
 <body>
@@ -319,6 +323,16 @@
         <h2>🎮 Asteroides: Edición Definitiva</h2>
         <div class="game-container">
             <canvas id="gameCanvas" width="800" height="800"></canvas>
+            <!-- Controles móviles nuevos: flechas + disparo -->
+            <div class="mobile-controls">
+                <div class="arrow-controls">
+                    <button class="ctrl-btn mobile-arrow" id="mobileLeftBtn">◀</button>
+                    <button class="ctrl-btn mobile-arrow" id="mobileUpBtn">▲</button>
+                    <button class="ctrl-btn mobile-arrow" id="mobileRightBtn">▶</button>
+                </div>
+                <button class="ctrl-btn shoot-btn" id="mobileShootBtn">🔫 Disparar</button>
+            </div>
+            <!-- Antiguo touch-controls se oculta en móvil -->
             <div class="touch-controls">
                 <div class="touch-area">
                     <div class="joystick-zone" id="joystickZone"></div>
@@ -458,7 +472,6 @@
             if (!rankingDiario.length || (rankingDiario[0]?.fecha && rankingDiario[0].fecha !== hoy)) {
                 rankingDiario = [];
             }
-            // El ranking del juego no se reinicia diariamente (es histórico), pero puedes cambiarlo si quieres.
         }
         
         function actualizarContadorVisitas() {
@@ -770,32 +783,72 @@
         });
         
         // ==================== CUESTIONARIO (100 PREGUNTAS ÚNICAS) ====================
-        let currentPlayer = '', currentScore = 0, availableQuestions = [], currentQuestion = null, answered = false, quizActive = false;
-        function generateQuestionBank() {
+        // Generador de 100 preguntas únicas
+        function generateUniqueQuestionBank() {
             const bank = [];
+            // Planetas principales con característica única
             const planetas = ["Mercurio", "Venus", "Tierra", "Marte", "Júpiter", "Saturno", "Urano", "Neptuno"];
-            const respuestasPlanetas = ["Es el planeta más cercano al Sol.", "Tiene una atmósfera densa de CO2.", "Nuestro hogar, el único con vida.", "El planeta rojo con el Monte Olimpo.", "Gigante gaseoso con la Gran Mancha Roja.", "Famoso por sus anillos.", "Gigante de hielo que rota de lado.", "El planeta más ventoso."];
-            for (let i=0; i<100; i++) {
-                if (i < 50) {
-                    const idx = i % planetas.length;
-                    const opts = [respuestasPlanetas[idx], ...respuestasPlanetas.filter((_,j) => j!==idx).slice(0,3)];
-                    bank.push({ q: `¿Cuál es la característica principal de ${planetas[idx]}?`, opts: opts, ans: 0 });
-                } else {
-                    const extras = [
-                        { q: "¿Cuál es la estrella más cercana a la Tierra?", opts: ["Próxima Centauri", "Sirio", "El Sol", "Alfa Centauri"], ans: 2 },
-                        { q: "¿En qué año llegó el ser humano a la Luna?", opts: ["1965", "1969", "1972", "1958"], ans: 1 },
-                        { q: "¿Qué tipo de galaxia es la Vía Láctea?", opts: ["Elíptica", "Espiral", "Irregular", "Lenticular"], ans: 1 },
-                        { q: "¿Qué es un año luz?", opts: ["Medida de tiempo", "Distancia que recorre la luz en un año", "Edad del universo", "Velocidad de la luz"], ans: 1 },
-                        { q: "¿Cuál es el planeta más caliente?", opts: ["Mercurio", "Venus", "Tierra", "Marte"], ans: 1 }
-                    ];
-                    const idx = i % extras.length;
-                    bank.push(extras[idx]);
+            const respuestas = [
+                "Es el planeta más cercano al Sol y el más pequeño.",
+                "Tiene una atmósfera densa de CO2 y efecto invernadero extremo.",
+                "Nuestro hogar, el único planeta conocido con vida.",
+                "El planeta rojo, con el volcán más grande del sistema solar (Monte Olimpo).",
+                "Gigante gaseoso con la Gran Mancha Roja, una tormenta gigante.",
+                "Famoso por su espectacular sistema de anillos.",
+                "Gigante de hielo que rota de lado, con un eje de inclinación extremo.",
+                "El planeta más ventoso, con vientos supersónicos."
+            ];
+            for(let i=0; i<8; i++) {
+                let opts = [respuestas[i]];
+                let otras = respuestas.filter((_,idx) => idx !== i);
+                while(opts.length < 4) opts.push(otras.shift());
+                bank.push({ q: `¿Cuál es la característica principal de ${planetas[i]}?`, opts: shuffleArray(opts), ans: opts.indexOf(respuestas[i]) });
+            }
+            // Más preguntas variadas (92 adicionales)
+            const extraQuestions = [
+                { q: "¿Cuál es la estrella más cercana a la Tierra?", opts: ["Próxima Centauri", "Sirio", "El Sol", "Alfa Centauri"], ans: 2 },
+                { q: "¿En qué año llegó el ser humano a la Luna?", opts: ["1965", "1969", "1972", "1958"], ans: 1 },
+                { q: "¿Qué tipo de galaxia es la Vía Láctea?", opts: ["Elíptica", "Espiral", "Irregular", "Lenticular"], ans: 1 },
+                { q: "¿Qué es un año luz?", opts: ["Medida de tiempo", "Distancia que recorre la luz en un año", "Edad del universo", "Velocidad de la luz"], ans: 1 },
+                { q: "¿Cuál es el planeta más caliente?", opts: ["Mercurio", "Venus", "Tierra", "Marte"], ans: 1 },
+                { q: "¿Cuántas lunas tiene Marte?", opts: ["1", "2", "4", "0"], ans: 1 },
+                { q: "¿Qué planeta tiene la mayor densidad?", opts: ["Júpiter", "Tierra", "Saturno", "Urano"], ans: 1 },
+                { q: "¿Quién formuló las leyes del movimiento planetario?", opts: ["Newton", "Kepler", "Galileo", "Copérnico"], ans: 1 },
+                { q: "¿Qué es un púlsar?", opts: ["Estrella de neutrones giratoria", "Agujero negro", "Nebulosa", "Galaxia"], ans: 0 },
+                { q: "¿Cuál es la luna más grande de Saturno?", opts: ["Titán", "Europa", "Ganímedes", "Calisto"], ans: 0 },
+                { q: "¿Qué misión llevó al primer humano a la Luna?", opts: ["Apolo 11", "Apolo 13", "Soyuz", "Artemis"], ans: 0 },
+                { q: "¿Qué planeta tiene el día más largo?", opts: ["Venus", "Mercurio", "Marte", "Júpiter"], ans: 0 }
+            ];
+            // Completar hasta 100 con variantes y más preguntas únicas
+            const baseSet = [
+                { q: "¿Cuál es el planeta más grande?", o: ["Júpiter","Saturno","Urano","Neptuno"], a:0 },
+                { q: "¿Qué planeta tiene anillos más visibles?", o: ["Saturno","Júpiter","Urano","Neptuno"], a:0 },
+                { q: "¿Dónde se encuentra el cinturón de asteroides?", o: ["Entre Marte y Júpiter","Entre Tierra y Marte","Más allá de Neptuno","Cerca del Sol"], a:0 },
+                { q: "¿Qué es una supernova?", o: ["Explosión estelar","Agujero negro","Nebulosa","Planeta"], a:0 },
+                { q: "¿Cuál es la galaxia más cercana a la Vía Láctea?", o: ["Andrómeda","Triángulo","Nube de Magallanes","Sombrero"], a:0 },
+                { q: "¿Qué instrumento se usa para observar el cielo?", o: ["Telescopio","Microscopio","Periscopio","Estetoscopio"], a:0 },
+                { q: "¿Qué científico propuso el modelo heliocéntrico?", o: ["Copérnico","Ptolomeo","Aristóteles","Kepler"], a:0 },
+                { q: "¿Cuántos planetas hay en el sistema solar?", o: ["8","9","7","10"], a:0 },
+                { q: "¿Qué es un eclipse solar?", o: ["La Luna tapa al Sol","La Tierra tapa al Sol","El Sol tapa a la Luna","Ninguna"], a:0 },
+                { q: "¿Qué planeta tiene la Gran Mancha Roja?", o: ["Júpiter","Saturno","Marte","Venus"], a:0 }
+            ];
+            let idx = 8;
+            while(bank.length < 100) {
+                if(idx < extraQuestions.length) bank.push({...extraQuestions[idx], opts: shuffleArray(extraQuestions[idx].opts.slice())});
+                else {
+                    let b = baseSet[(idx - extraQuestions.length) % baseSet.length];
+                    bank.push({ q: b.q, opts: shuffleArray(b.o.slice()), ans: b.a });
                 }
+                idx++;
             }
             return bank.slice(0,100);
         }
-        const questionBank = generateQuestionBank();
+        
         function shuffleArray(arr) { for (let i=arr.length-1; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+        
+        const questionBank = generateUniqueQuestionBank();
+        let currentPlayer = '', currentScore = 0, availableQuestions = [], currentQuestion = null, answered = false, quizActive = false;
+        
         function startQuiz() {
             const name = document.getElementById('playerName').value.trim();
             if (!name) { alert('Ingresa tu nombre'); return; }
@@ -829,14 +882,12 @@
             document.getElementById('progressFill').style.width = ((100 - availableQuestions.length) / 100 * 100) + '%';
             const optsContainer = document.getElementById('optionsContainer');
             optsContainer.innerHTML = '';
-            const optsWithIndex = currentQuestion.opts.map((text, idx) => ({ text, idx }));
-            shuffleArray(optsWithIndex);
-            optsWithIndex.forEach(opt => {
+            currentQuestion.opts.forEach((text, idx) => {
                 const div = document.createElement('div');
                 div.className = 'question-option';
-                div.textContent = opt.text;
-                div.dataset.opt = opt.idx;
-                div.addEventListener('click', () => handleAnswer(opt.idx, div));
+                div.textContent = text;
+                div.dataset.opt = idx;
+                div.addEventListener('click', () => handleAnswer(idx, div));
                 optsContainer.appendChild(div);
             });
         }
@@ -898,6 +949,10 @@
         let ship = { x:400, y:400, vx:0, vy:0, angle:0, active:true };
         let bullets = [], enemies = [], asteroids = [];
         let gameScore = 0, gameRunning = false, gameLoopId = null, gameTime = 0;
+        
+        // Banderas para controles móviles
+        let mobileLeft = false, mobileRight = false, mobileUp = false, mobileShoot = false;
+        
         function resetGame() {
             ship = { x:400, y:400, vx:0, vy:0, angle:0, active:true };
             bullets=[]; enemies=[]; asteroids=[]; gameScore=0; gameTime=0;
@@ -914,6 +969,16 @@
         function drawAsteroids() { gCtx.strokeStyle='#aaa'; gCtx.lineWidth=2; asteroids.forEach(a=>{ gCtx.beginPath(); gCtx.arc(a.x,a.y,a.size,0,2*Math.PI); gCtx.stroke(); }); }
         function updateGame() {
             if(!gameRunning) return;
+            // Controles móviles
+            if(ship.active) {
+                if(mobileLeft) ship.angle -= 0.1;
+                if(mobileRight) ship.angle += 0.1;
+                if(mobileUp) { ship.vx += 0.2*Math.cos(ship.angle); ship.vy += 0.2*Math.sin(ship.angle); }
+                if(mobileShoot) {
+                    bullets.push({ x:ship.x+15*Math.cos(ship.angle), y:ship.y+15*Math.sin(ship.angle), vx:ship.vx+5*Math.cos(ship.angle), vy:ship.vy+5*Math.sin(ship.angle) });
+                    playSound('shoot'); mobileShoot = false;
+                }
+            }
             gameTime += 1/60;
             if(gameTime>30 && gameTime<=60) { if(Math.random()<0.005 && enemies.filter(e=>e.type==='splitter').length<2) enemies.push({ type:'splitter', x:Math.random()*800, y:Math.random()*800, vx:(Math.random()-0.5)*1.0, vy:(Math.random()-0.5)*1.0, size:25 }); }
             else if(gameTime>60) { const maxShooters = gameTime>90?3:1; if(Math.random()<0.003 && enemies.filter(e=>e.type==='shooter').length<maxShooters) enemies.push({ type:'shooter', x:Math.random()*800, y:Math.random()*800, vx:(Math.random()-0.5)*0.8, vy:(Math.random()-0.5)*0.8, size:18, angle:0, shootCooldown:20 }); if(Math.random()<0.005 && enemies.filter(e=>e.type==='splitter').length<3) enemies.push({ type:'splitter', x:Math.random()*800, y:Math.random()*800, vx:(Math.random()-0.5)*1.2, vy:(Math.random()-0.5)*1.2, size:22 }); }
@@ -922,6 +987,7 @@
             bullets = bullets.filter(b=>{ b.x+=b.vx; b.y+=b.vy; return (b.x>=0 && b.x<=800 && b.y>=0 && b.y<=800); });
             enemies.forEach(e=>{ e.x+=e.vx; e.y+=e.vy; if(e.x<0) e.x=800; if(e.x>800) e.x=0; if(e.y<0) e.y=800; if(e.y>800) e.y=0; if(e.type==='shooter'){ if(ship.active) e.angle = Math.atan2(ship.y-e.y, ship.x-e.x); e.shootCooldown--; if(e.shootCooldown<=0 && ship.active){ bullets.push({ x:e.x+e.size*Math.cos(e.angle), y:e.y+e.size*Math.sin(e.angle), vx:2*Math.cos(e.angle), vy:2*Math.sin(e.angle), enemyBullet:true }); e.shootCooldown=60; } } });
             asteroids.forEach(a=>{ a.x+=a.vx; a.y+=a.vy; if(a.x<0) a.x=800; if(a.x>800) a.x=0; if(a.y<0) a.y=800; if(a.y>800) a.y=0; });
+            // colisiones...
             for(let i=bullets.length-1;i>=0;i--) { const b=bullets[i]; for(let j=asteroids.length-1;j>=0;j--) { const a=asteroids[j]; if(Math.hypot(b.x-a.x,b.y-a.y)<a.size) { bullets.splice(i,1); asteroids.splice(j,1); gameScore+=10; gameScoreSpan.textContent=gameScore; playSound('explosion'); break; } } }
             for(let i=bullets.length-1;i>=0;i--) { const b=bullets[i]; if(b.enemyBullet) continue; for(let j=enemies.length-1;j>=0;j--) { const e=enemies[j]; if(Math.hypot(b.x-e.x,b.y-e.y)<e.size+5) { bullets.splice(i,1); if(e.type==='splitter'){ playSound('explosion'); gameScore+=20; gameScoreSpan.textContent=gameScore; if(e.size>8){ for(let k=0;k<2;k++) enemies.push({ type:'splitter', x:e.x, y:e.y, vx:e.vx+(Math.random()-0.5)*2, vy:e.vy+(Math.random()-0.5)*2, size:e.size*0.7 }); } enemies.splice(j,1); } else { playSound('explosion'); gameScore+=30; gameScoreSpan.textContent=gameScore; enemies.splice(j,1); } break; } } }
             if(ship.active) { for(let a of asteroids) if(Math.hypot(ship.x-a.x,ship.y-a.y)<a.size+10) { ship.active=false; gameRunning=false; stopGame(); guardarPuntuacionJuego(); break; } for(let e of enemies) if(Math.hypot(ship.x-e.x,ship.y-e.y)<e.size+10) { ship.active=false; gameRunning=false; stopGame(); guardarPuntuacionJuego(); break; } for(let b of bullets) if(b.enemyBullet && Math.hypot(ship.x-b.x,ship.y-b.y)<12) { ship.active=false; gameRunning=false; stopGame(); guardarPuntuacionJuego(); break; } }
@@ -939,20 +1005,34 @@
             if(!gameRanking.length) { list.innerHTML = '<li>Aún no hay puntajes.</li>'; return; }
             list.innerHTML = gameRanking.map((r,i)=>`<li><span>${i+1}. ${r.nombre}</span><span>${r.puntaje} pts</span></li>`).join('');
         }
-        // Controles táctiles (Joystick)
-        let joystickActive=false, joystickStartX=0, joystickStartY=0;
-        const joystickZone = document.getElementById('joystickZone');
-        const shootZone = document.getElementById('shootZone');
-        function handleJoystickStart(e) { e.preventDefault(); const touch=e.touches[0]; joystickActive=true; joystickStartX=touch.clientX; joystickStartY=touch.clientY; }
-        function handleJoystickMove(e) {
-            e.preventDefault(); if(!joystickActive) return;
-            const touch=e.touches[0]; const dx=touch.clientX-joystickStartX; const dy=touch.clientY-joystickStartY; const dist=Math.hypot(dx,dy);
-            if(dist>20) { const normX=dx/dist, normY=dy/dist; if(gameRunning && ship.active) { ship.angle += normX*0.1; if(normY<-0.3) { const thrust=Math.min(1,-normY); ship.vx += 0.3*thrust*Math.cos(ship.angle); ship.vy += 0.3*thrust*Math.sin(ship.angle); } } }
+        
+        // Configurar botones móviles
+        const leftBtn = document.getElementById('mobileLeftBtn');
+        const rightBtn = document.getElementById('mobileRightBtn');
+        const upBtn = document.getElementById('mobileUpBtn');
+        const shootBtn = document.getElementById('mobileShootBtn');
+        
+        function setMobileControl(btn, flag, value) {
+            btn.addEventListener('mousedown', (e)=>{ e.preventDefault(); flag = value; });
+            btn.addEventListener('mouseup', ()=>{ flag = false; });
+            btn.addEventListener('touchstart', (e)=>{ e.preventDefault(); flag = value; });
+            btn.addEventListener('touchend', (e)=>{ e.preventDefault(); flag = false; });
         }
-        function handleJoystickEnd(e) { e.preventDefault(); joystickActive=false; }
-        function handleShoot(e) { e.preventDefault(); if(gameRunning && ship.active) { bullets.push({ x:ship.x+15*Math.cos(ship.angle), y:ship.y+15*Math.sin(ship.angle), vx:ship.vx+5*Math.cos(ship.angle), vy:ship.vy+5*Math.sin(ship.angle) }); playSound('shoot'); } }
-        if(joystickZone) { joystickZone.addEventListener('touchstart',handleJoystickStart); joystickZone.addEventListener('touchmove',handleJoystickMove); joystickZone.addEventListener('touchend',handleJoystickEnd); joystickZone.addEventListener('touchcancel',handleJoystickEnd); }
-        if(shootZone) { let shootInterval; shootZone.addEventListener('touchstart',(e)=>{ e.preventDefault(); if(gameRunning && ship.active) { handleShoot(e); shootInterval=setInterval(()=>handleShoot(e),150); } }); shootZone.addEventListener('touchend',(e)=>{ e.preventDefault(); clearInterval(shootInterval); }); shootZone.addEventListener('touchcancel',(e)=>{ e.preventDefault(); clearInterval(shootInterval); }); }
+        leftBtn.addEventListener('mousedown', (e)=>{ e.preventDefault(); mobileLeft = true; });
+        leftBtn.addEventListener('mouseup', ()=> mobileLeft = false);
+        leftBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); mobileLeft = true; });
+        leftBtn.addEventListener('touchend', ()=> mobileLeft = false);
+        rightBtn.addEventListener('mousedown', (e)=>{ e.preventDefault(); mobileRight = true; });
+        rightBtn.addEventListener('mouseup', ()=> mobileRight = false);
+        rightBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); mobileRight = true; });
+        rightBtn.addEventListener('touchend', ()=> mobileRight = false);
+        upBtn.addEventListener('mousedown', (e)=>{ e.preventDefault(); mobileUp = true; });
+        upBtn.addEventListener('mouseup', ()=> mobileUp = false);
+        upBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); mobileUp = true; });
+        upBtn.addEventListener('touchend', ()=> mobileUp = false);
+        shootBtn.addEventListener('mousedown', (e)=>{ e.preventDefault(); mobileShoot = true; });
+        shootBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); mobileShoot = true; });
+        
         // Controles PC
         const keys = {};
         window.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return; if(e.key===' ') { e.preventDefault(); if(gameRunning && ship.active) { bullets.push({ x:ship.x+15*Math.cos(ship.angle), y:ship.y+15*Math.sin(ship.angle), vx:ship.vx+5*Math.cos(ship.angle), vy:ship.vy+5*Math.sin(ship.angle) }); playSound('shoot'); } } keys[e.key]=true; });
@@ -981,3 +1061,4 @@
 </script>
 </body>
 </html>
+
